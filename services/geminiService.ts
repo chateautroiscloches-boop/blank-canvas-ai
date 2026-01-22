@@ -4,7 +4,20 @@ import { GroundingChunk, PaintColor } from '../types';
 import { findPaintByBrandAndName } from '../functions/authoritativePaintService';
 
 // According to guidelines, API key must be from process.env.API_KEY
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Browser build (Vite/Netlify): API key must come from import.meta.env
+const apiKey =
+  (import.meta as any).env?.VITE_GEMINI_API_KEY ||
+  (import.meta as any).env?.VITE_API_KEY ||
+  '';
+
+if (!apiKey) {
+  throw new Error(
+    'Missing API key. Set VITE_GEMINI_API_KEY in Netlify Environment Variables and redeploy (clear cache).'
+  );
+}
+
+const ai = new GoogleGenAI({ apiKey });
+
 
 // Helper to extract base64 image from response
 const getImageFromResponse = (response: GenerateContentResponse): { base64: string; mimeType: string } => {

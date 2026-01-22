@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blank Canvas AI</title>
+  
+  <!-- Google AdSense -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5389871242763102"
+     crossorigin="anonymous"></script>
+
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="icon" href="/static/icon.png" type="image/png">
+  <link rel="apple-touch-icon" href="/static/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prata&family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            background: '#000000', // Pure Black
+            surface: '#000000', // Unified Black
+            primary: '#CCA53A', // Legacy, prefer 'gold'
+            gold: '#CCA53A',
+            'gold-dark': '#B88B2F',
+            'cta-blue': '#2A4D69',
+            'cta-blue-dark': '#203A50',
+            'text-primary': '#F5F5F5',
+            'text-cream': '#F3EFE9',
+            'text-secondary': '#A39F99',
+            border: '#3D3B39',
+          },
+          fontFamily: {
+            'sans': ['Poppins', 'Inter', 'sans-serif'],
+            'serif': ['Playfair Display', 'serif'],
+            'prata': ['Prata', 'serif'],
+          },
+        },
+      },
+    }
+  </script>
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+</head>
+<body class="bg-background text-text-primary font-sans">
+  <div id="root"></div>
+  <script type="module" src="./index.tsx"></script>
+</body>
+</html>

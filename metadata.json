@@ -1,0 +1,7 @@
+{
+  "name": "Blank Canvas AI",
+  "description": "An AI-powered interior design assistant by Chateau Trois Cloches. Visualize new wallpapers, paint colors, or decorative wall panelling in your room instantly. You can also use text prompts to edit your room's image or get design ideas.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

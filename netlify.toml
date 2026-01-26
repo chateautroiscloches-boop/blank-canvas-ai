@@ -1,0 +1,4 @@
+[[redirects]]
+from = "/ads.txt"
+to = "/public/ads.txt"
+status = 200

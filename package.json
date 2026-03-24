@@ -1,16 +1,12 @@
 {
   "name": "blank-canvas-ai",
-  "slug": "blank-canvas-ai",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "start": "expo start",
-    "android": "expo run:android",
-    "ios": "expo run:ios"
+    "preview": "vite preview"
   },
   "dependencies": {
     "expo": "^49.0.0",
@@ -19,7 +15,6 @@
     "@google/genai": "^1.27.0"
   },
   "devDependencies": {
-    "expo-cli": "^6.4.3",
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.2.0",
     "typescript": "~5.8.2",

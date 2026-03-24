@@ -3,17 +3,22 @@
     "name": "Blank Canvas AI",
     "slug": "blank-canvas-ai",
     "version": "0.0.0",
-    "platforms": ["android", "ios", "web"],
-    "android": {
-      "package": "com.blankcanvasai.app"
-    },
-    "ios": {
-      "bundleIdentifier": "com.blankcanvasai.app"
-    },
+    "platforms": ["ios", "android", "web"],
     "extra": {
       "eas": {
         "projectId": "4ed8a4e3-ef98-4693-a2a3-7012221710f5"
       }
+    },
+    "android": {
+      "package": "com.blankcanvasai.app",
+      "versionCode": 1
+    },
+    "ios": {
+      "bundleIdentifier": "com.blankcanvasai.app",
+      "buildNumber": "1.0.0"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     }
   }
 }

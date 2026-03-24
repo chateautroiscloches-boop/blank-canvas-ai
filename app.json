@@ -4,6 +4,7 @@
     "slug": "blank-canvas-ai",
     "version": "0.0.0",
     "platforms": ["ios", "android", "web"],
+    "owner": "blankcanvas1",
     "extra": {
       "eas": {
         "projectId": "4ed8a4e3-ef98-4693-a2a3-7012221710f5"
@@ -19,6 +20,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "cli": {
+      "appVersionSource": "packageJson"
     }
   }
 }

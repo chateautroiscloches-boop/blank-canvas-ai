@@ -4,9 +4,7 @@
       "android": {
         "buildType": "apk"
       },
-      "ios": {
-        "simulator": true
-      }
+      "node": "20.0.0"
     }
   }
 }

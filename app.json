@@ -1,1 +1,19 @@
-
+{
+  "expo": {
+    "name": "Blank Canvas AI",
+    "slug": "blank-canvas-ai",
+    "version": "0.0.0",
+    "platforms": ["android", "ios", "web"],
+    "android": {
+      "package": "com.blankcanvasai.app"
+    },
+    "ios": {
+      "bundleIdentifier": "com.blankcanvasai.app"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "4ed8a4e3-ef98-4693-a2a3-7012221710f5"
+      }
+    }
+  }
+}

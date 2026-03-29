@@ -1,0 +1,21 @@
+{
+  "appId": "com.blankcanvasai.app",
+  "appName": "Blank Canvas AI",
+  "webDir": "dist",
+  "server": {
+    "url": "https://blankcanvas-ai.com",
+    "cleartext": true
+  },
+  "plugins": {
+    "Camera": {
+      "permissions": ["camera", "photos"]
+    }
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#000000"
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}

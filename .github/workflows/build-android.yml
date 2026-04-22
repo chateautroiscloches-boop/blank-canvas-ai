@@ -16,10 +16,11 @@ jobs:
       - run: npm install -g @capacitor/cli
       - run: npx cap add android
       - run: npx cap sync android
-      - name: Update package name
+      - name: Update package name and version code
         run: |
           find android -name "*.gradle" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
           find android -name "AndroidManifest.xml" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
+          sed -i 's/versionCode 1/versionCode 3/g' android/app/build.gradle
       - uses: actions/setup-java@v4
         with:
           java-version: "17"

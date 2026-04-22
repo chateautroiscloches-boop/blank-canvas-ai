@@ -16,16 +16,18 @@ jobs:
       - run: npm install -g @capacitor/cli
       - run: npx cap add android
       - run: npx cap sync android
-      - name: Update package name, version code, API level and permissions
+      - name: Update Android config
         run: |
           find android -name "*.gradle" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
           find android -name "AndroidManifest.xml" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
-          sed -i 's/versionCode 1/versionCode 5/g' android/app/build.gradle
-          sed -i 's/targetSdkVersion 34/targetSdkVersion 35/g' android/app/build.gradle
-          sed -i 's/targetSdk 34/targetSdk 35/g' android/app/build.gradle
-          sed -i 's/compileSdkVersion 34/compileSdkVersion 35/g' android/app/build.gradle
-          sed -i 's/compileSdk 34/compileSdk 35/g' android/app/build.gradle
+          sed -i 's/versionCode 1/versionCode 6/g' android/app/build.gradle
+          sed -i 's/targetSdkVersion [0-9]*/targetSdkVersion 35/g' android/app/build.gradle
+          sed -i 's/targetSdk [0-9]*/targetSdk 35/g' android/app/build.gradle
+          sed -i 's/compileSdkVersion [0-9]*/compileSdkVersion 35/g' android/app/build.gradle
+          sed -i 's/compileSdk [0-9]*/compileSdk 35/g' android/app/build.gradle
           sed -i '/<uses-permission android:name="android.permission.INTERNET"/a\    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>' android/app/src/main/AndroidManifest.xml
+          echo "--- build.gradle after changes ---"
+          cat android/app/build.gradle
       - uses: actions/setup-java@v4
         with:
           java-version: "17"

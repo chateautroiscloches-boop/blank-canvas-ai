@@ -1,175 +1,95 @@
-55s
-Run cd android
-Downloading https://services.gradle.org/distributions/gradle-8.2.1-all.zip
-..................10%..................20%...................30%..................40%...................50%..................60%..................70%...................80%..................90%...................100%
-
-Welcome to Gradle 8.2.1!
-
-Here are the highlights of this release:
- - Kotlin DSL: new reference documentation, assignment syntax by default
- - Kotlin DSL is now the default with Gradle init
- - Improved suggestions to resolve errors in console output
- - Reduced sync memory consumption
-
-For more details see https://docs.gradle.org/8.2.1/release-notes.html
-
-Starting a Gradle Daemon (subsequent builds will be faster)
-
-> Configure project :app
-WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
-
-> Configure project :capacitor-cordova-android-plugins
-WARNING: Using flatDir should be avoided because it doesn't support any meta-data formats.
-WARNING: We recommend using a newer Android Gradle plugin to use compileSdk = 35
-
-This Android Gradle plugin (8.2.1) was tested up to compileSdk = 34.
-
-You are strongly encouraged to update your project to use a newer
-Android Gradle plugin that has been tested with compileSdk = 35.
-
-If you are already using the latest version of the Android Gradle plugin,
-you may need to wait until a newer version with support for compileSdk = 35 is available.
-
-To suppress this warning, add/update
-    android.suppressUnsupportedCompileSdk=35
-to this project's gradle.properties.
-
-> Task :app:preBuild UP-TO-DATE
-> Task :app:preReleaseBuild UP-TO-DATE
-> Task :app:generateReleaseResValues
-> Task :capacitor-android:preBuild UP-TO-DATE
-> Task :capacitor-android:preReleaseBuild UP-TO-DATE
-> Task :capacitor-android:generateReleaseResValues
-> Task :capacitor-android:generateReleaseResources
-> Task :capacitor-android:packageReleaseResources
-> Task :capacitor-app:preBuild UP-TO-DATE
-> Task :capacitor-app:preReleaseBuild UP-TO-DATE
-> Task :capacitor-app:generateReleaseResValues
-> Task :capacitor-app:generateReleaseResources
-> Task :capacitor-app:packageReleaseResources
-> Task :capacitor-camera:preBuild UP-TO-DATE
-> Task :capacitor-camera:preReleaseBuild UP-TO-DATE
-> Task :capacitor-camera:generateReleaseResValues
-> Task :capacitor-camera:generateReleaseResources
-> Task :capacitor-camera:packageReleaseResources
-> Task :capacitor-haptics:preBuild UP-TO-DATE
-> Task :capacitor-haptics:preReleaseBuild UP-TO-DATE
-> Task :capacitor-haptics:generateReleaseResValues
-> Task :capacitor-haptics:generateReleaseResources
-> Task :capacitor-haptics:packageReleaseResources
-> Task :capacitor-keyboard:preBuild UP-TO-DATE
-> Task :capacitor-keyboard:preReleaseBuild UP-TO-DATE
-> Task :capacitor-keyboard:generateReleaseResValues
-> Task :capacitor-keyboard:generateReleaseResources
-> Task :capacitor-keyboard:packageReleaseResources
-> Task :capacitor-status-bar:preBuild UP-TO-DATE
-> Task :capacitor-status-bar:preReleaseBuild UP-TO-DATE
-> Task :capacitor-status-bar:generateReleaseResValues
-> Task :capacitor-status-bar:generateReleaseResources
-> Task :capacitor-status-bar:packageReleaseResources
-> Task :app:mapReleaseSourceSetPaths
-> Task :app:generateReleaseResources
-> Task :app:createReleaseCompatibleScreenManifests
-> Task :app:extractDeepLinksRelease
-> Task :capacitor-android:extractDeepLinksRelease
-> Task :capacitor-app:extractDeepLinksRelease
-> Task :capacitor-camera:extractDeepLinksRelease
-> Task :capacitor-android:processReleaseManifest
-> Task :capacitor-haptics:extractDeepLinksRelease
-> Task :capacitor-app:processReleaseManifest
-> Task :capacitor-camera:processReleaseManifest
-> Task :capacitor-keyboard:extractDeepLinksRelease
-> Task :capacitor-haptics:processReleaseManifest
-> Task :capacitor-status-bar:extractDeepLinksRelease
-> Task :capacitor-keyboard:processReleaseManifest
-> Task :capacitor-status-bar:processReleaseManifest
-> Task :capacitor-android:writeReleaseAarMetadata
-> Task :app:mergeReleaseResources
-> Task :app:processReleaseMainManifest
-> Task :app:processReleaseManifest
-> Task :app:processApplicationManifestReleaseForBundle
-> Task :capacitor-app:writeReleaseAarMetadata
-> Task :capacitor-camera:writeReleaseAarMetadata
-> Task :capacitor-haptics:writeReleaseAarMetadata
-> Task :capacitor-keyboard:writeReleaseAarMetadata
-> Task :capacitor-status-bar:writeReleaseAarMetadata
-> Task :app:packageReleaseResources
-> Task :app:checkReleaseAarMetadata
-> Task :capacitor-android:compileReleaseLibraryResources
-> Task :app:parseReleaseLocalResources
-> Task :capacitor-app:compileReleaseLibraryResources
-> Task :capacitor-android:parseReleaseLocalResources
-> Task :app:processReleaseManifestForPackage
-> Task :capacitor-camera:compileReleaseLibraryResources
-> Task :capacitor-app:parseReleaseLocalResources
-> Task :capacitor-camera:parseReleaseLocalResources
-> Task :capacitor-haptics:compileReleaseLibraryResources
-> Task :capacitor-app:generateReleaseRFile
-> Task :capacitor-android:generateReleaseRFile
-> Task :capacitor-camera:generateReleaseRFile
-> Task :capacitor-haptics:parseReleaseLocalResources
-> Task :capacitor-keyboard:compileReleaseLibraryResources
-> Task :capacitor-status-bar:compileReleaseLibraryResources
-> Task :capacitor-keyboard:parseReleaseLocalResources
-> Task :capacitor-haptics:generateReleaseRFile
-> Task :capacitor-android:javaPreCompileRelease
-> Task :capacitor-app:javaPreCompileRelease
-> Task :capacitor-status-bar:parseReleaseLocalResources
-> Task :capacitor-keyboard:generateReleaseRFile
-
-Note: Some input files use unchecked or unsafe operations.
-> Task :capacitor-android:compileReleaseJavaWithJavac
-Note: Recompile with -Xlint:unchecked for details.
-
-> Task :capacitor-status-bar:generateReleaseRFile
-> Task :capacitor-android:bundleLibCompileToJarRelease
-> Task :capacitor-app:compileReleaseJavaWithJavac
-> Task :capacitor-app:bundleLibRuntimeToJarRelease
-> Task :capacitor-camera:javaPreCompileRelease
-> Task :capacitor-haptics:javaPreCompileRelease
-> Task :capacitor-android:bundleLibRuntimeToJarRelease
-> Task :app:processReleaseResources
-Note: /home/runner/work/blank-canvas-ai/blank-canvas-ai/node_modules/@capacitor/camera/android/src/main/java/com/capacitorjs/plugins/camera/CameraBottomSheetDialogFragment.java uses unchecked or unsafe operations.
-
-> Task :capacitor-camera:compileReleaseJavaWithJavac
-Note: Recompile with -Xlint:unchecked for details.
-
-> Task :capacitor-camera:bundleLibRuntimeToJarRelease
-> Task :app:bundleReleaseResources
-> Task :capacitor-haptics:compileReleaseJavaWithJavac
-> Task :capacitor-haptics:bundleLibRuntimeToJarRelease
-> Task :capacitor-keyboard:javaPreCompileRelease
-> Task :capacitor-keyboard:compileReleaseJavaWithJavac
-> Task :capacitor-keyboard:bundleLibRuntimeToJarRelease
-> Task :capacitor-status-bar:javaPreCompileRelease
-> Task :capacitor-status-bar:compileReleaseJavaWithJavac
-> Task :capacitor-status-bar:bundleLibRuntimeToJarRelease
-> Task :app:javaPreCompileRelease
-> Task :capacitor-app:bundleLibCompileToJarRelease
-> Task :capacitor-camera:bundleLibCompileToJarRelease
-> Task :capacitor-haptics:bundleLibCompileToJarRelease
-> Task :capacitor-keyboard:bundleLibCompileToJarRelease
-> Task :app:checkReleaseDuplicateClasses
-> Task :capacitor-status-bar:bundleLibCompileToJarRelease
-> Task :app:desugarReleaseFileDependencies
-
-> Task :app:compileReleaseJavaWithJavac FAILED
-/home/runner/work/blank-canvas-ai/blank-canvas-ai/android/app/src/main/java/com/blankcanvas/ai/MainActivity.java:5: error: cannot access AppCompatActivity
-90 actionable tasks: 90 executed
-public class MainActivity extends BridgeActivity {}
-       ^
-  class file for androidx.appcompat.app.AppCompatActivity not found
-1 error
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':app:compileReleaseJavaWithJavac'.
-> Compilation failed; see the compiler error output for details.
-
-* Try:
-> Run with --info option to get more log output.
-> Run with --scan to get full insights.
-
-BUILD FAILED in 55s
-Error: Process completed with exit code 1.
+name: Build Android APK
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm install
+      - run: npm run build
+      - run: npm install -g @capacitor/cli
+      - run: npx cap add android
+      - run: npx cap sync android
+      - name: Update package name and manifest
+        run: |
+          find android -name "*.gradle" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
+          find android -name "AndroidManifest.xml" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
+          sed -i '/<uses-permission android:name="android.permission.INTERNET"/a\    <uses-permission android:name="com.google.android.gms.permission.AD_ID"\/>\n    <uses-permission android:name="android.permission.CAMERA"\/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"\/>/' android/app/src/main/AndroidManifest.xml
+      - name: Write build.gradle
+        run: |
+          cat > android/app/build.gradle << 'GRADLE'
+          apply plugin: 'com.android.application'
+          android {
+            namespace "com.blankcanvas.ai"
+            compileSdk 35
+            defaultConfig {
+              applicationId "com.blankcanvas.ai"
+              minSdkVersion 22
+              targetSdkVersion 35
+              versionCode 8
+              versionName "1.0.8"
+            }
+            buildTypes {
+              release {
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+              }
+            }
+          }
+          repositories {
+            flatDir {
+              dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+            }
+          }
+          dependencies {
+            implementation fileTree(include: ['*.jar'], dir: 'libs')
+            implementation project(':capacitor-android')
+            implementation project(':capacitor-app')
+            implementation project(':capacitor-camera')
+            implementation project(':capacitor-haptics')
+            implementation project(':capacitor-keyboard')
+            implementation project(':capacitor-status-bar')
+            implementation 'androidx.core:core-splashscreen:1.0.1'
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+            implementation 'androidx.webkit:webkit:1.8.0'
+          }
+          apply from: 'capacitor.build.gradle'
+          try {
+            def servicesJSON = file('google-services.json')
+            if (servicesJSON.text) {
+              apply plugin: 'com.google.gms.google-services'
+            }
+          } catch(Exception e) {
+            logger.info("google-services.json not found, not applying google-services plugin")
+          }
+          GRADLE
+      - uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+      - name: Build Signed AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/android/app/release.keystore \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blank-canvas-ai-release
+          path: android/app/build/outputs/bundle/release/app-release.aab

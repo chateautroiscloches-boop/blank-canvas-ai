@@ -2,7 +2,7 @@
   "expo": {
     "name": "Blank Canvas AI",
     "slug": "blank-canvas-ai",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "platforms": ["ios", "android", "web"],
     "owner": "blankcanvas",
     "extra": {
@@ -12,11 +12,11 @@
     },
     "android": {
       "package": "com.blankcanvas.ai",
-      "versionCode": 4
+      "versionCode": 5
     },
     "ios": {
       "bundleIdentifier": "com.blankcanvas.ai",
-      "buildNumber": "1.0.4"
+      "buildNumber": "1.0.5"
     },
     "web": {
       "favicon": "./assets/favicon.png"

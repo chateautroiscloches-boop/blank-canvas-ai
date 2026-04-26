@@ -16,6 +16,10 @@ jobs:
       - run: npm install -g @capacitor/cli
       - run: npx cap add android
       - run: npx cap sync android
+      - name: Pin Gradle version
+        run: |
+          cd android
+          ./gradlew wrapper --gradle-version 8.2.1
       - name: Update package name and manifest
         run: |
           find android -name "*.gradle" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
@@ -32,8 +36,8 @@ jobs:
               applicationId "com.blankcanvas.ai"
               minSdkVersion 22
               targetSdkVersion 35
-              versionCode 10
-              versionName "1.1.0"
+              versionCode 11
+              versionName "1.1.1"
             }
             buildTypes {
               release {

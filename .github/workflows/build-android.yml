@@ -20,6 +20,8 @@ jobs:
         run: |
           cd android
           ./gradlew wrapper --gradle-version 8.2.1
+      - name: Clear Gradle cache
+        run: rm -rf ~/.gradle/caches
       - name: Update package name and manifest
         run: |
           find android -name "*.gradle" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
@@ -36,8 +38,8 @@ jobs:
               applicationId "com.blankcanvas.ai"
               minSdkVersion 22
               targetSdkVersion 35
-              versionCode 11
-              versionName "1.1.1"
+              versionCode 12
+              versionName "1.1.2"
             }
             buildTypes {
               release {

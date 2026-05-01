@@ -15,10 +15,6 @@ jobs:
         with:
           java-version: "17"
           distribution: temurin
-      - name: Clear Gradle cache
-        run: |
-          rm -rf ~/.gradle/caches
-          rm -rf ~/.gradle/wrapper
       - run: npm install
       - run: npm run build
       - run: npm install -g @capacitor/cli
@@ -38,10 +34,10 @@ jobs:
             compileSdk 35
             defaultConfig {
               applicationId "com.blankcanvas.ai"
-              minSdkVersion 22
+              minSdkVersion 24
               targetSdkVersion 35
-              versionCode 13
-              versionName "1.1.3"
+              versionCode 14
+              versionName "1.1.4"
             }
             buildTypes {
               release {
@@ -77,6 +73,9 @@ jobs:
             logger.info("google-services.json not found, not applying google-services plugin")
           }
           GRADLE
+      - name: Update AGP version
+        run: |
+          sed -i "s/com.android.tools.build:gradle:[0-9.]*/com.android.tools.build:gradle:8.5.0/" android/build.gradle
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore

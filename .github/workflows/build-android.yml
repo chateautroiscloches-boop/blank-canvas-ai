@@ -25,19 +25,22 @@ jobs:
           find android -name "*.gradle" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
           find android -name "AndroidManifest.xml" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
           sed -i '/<uses-permission android:name="android.permission.INTERNET"/a\    <uses-permission android:name="com.google.android.gms.permission.AD_ID"\/>\n    <uses-permission android:name="android.permission.CAMERA"\/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"\/>/' android/app/src/main/AndroidManifest.xml
+      - name: Update AGP version
+        run: |
+          sed -i "s/com.android.tools.build:gradle:[0-9.]*/com.android.tools.build:gradle:8.9.1/" android/build.gradle
       - name: Write build.gradle
         run: |
           cat > android/app/build.gradle << 'GRADLE'
           apply plugin: 'com.android.application'
           android {
             namespace "com.blankcanvas.ai"
-            compileSdk 35
+            compileSdk 36
             defaultConfig {
               applicationId "com.blankcanvas.ai"
               minSdkVersion 24
-              targetSdkVersion 35
-              versionCode 15
-              versionName "1.1.5"
+              targetSdkVersion 36
+              versionCode 16
+              versionName "1.1.6"
             }
             buildTypes {
               release {
@@ -73,9 +76,6 @@ jobs:
             logger.info("google-services.json not found, not applying google-services plugin")
           }
           GRADLE
-      - name: Update AGP version
-        run: |
-          sed -i "s/com.android.tools.build:gradle:[0-9.]*/com.android.tools.build:gradle:8.5.0/" android/build.gradle
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore

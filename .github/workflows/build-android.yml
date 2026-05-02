@@ -43,11 +43,7 @@ jobs:
           }
           EOF
       - name: Write build.gradle
-        - name: Check final targetSdk
         run: |
-          echo "=== app/build.gradle ==="
-          cat android/app/build.gradle
-          echo "=== capacitor.build.gradle ==="
-          cat android/app/capacitor.build.gradle || echo "not found"
-          echo "=== Searching all gradle files for targetSdk ==="
-          grep -r "targetSdk" android/ || echo "none found"
+          cat > android/app/build.gradle << 'GRADLE'
+          apply plugin: 'com.android.application'
+          androi

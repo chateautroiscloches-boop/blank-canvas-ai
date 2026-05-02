@@ -66,7 +66,7 @@ export const applyPaintColor = async (
 
   const recolorPrompt = `TASK: Paint EVERY visible wall and trim surface in this room HEX: ${hexColor}. REPLACE existing pigments with 100% OPACITY. Separate COLOR from LIGHTING. Ensure Burgundy and Navy are RICH and SATURATED, not black. Ensure Cream is WARM and BUTTERY, not white. Output ONLY the image.`;
 
-  const data = await callGemini('gemini-2.5-flash-image', {
+  const data = await callGemini('gemini-3.1-flash-image-preview', {
     contents: [{
       parts: [
         { inlineData: { data: roomBase64, mimeType: roomMimeType } },
@@ -83,7 +83,7 @@ export const extractPatternFromImage = async (
   imageBase64: string,
   imageMimeType: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  const data = await callGemini('gemini-2.5-flash-image', {
+  const data = await callGemini('gemini-3.1-flash-image-preview', {
     contents: [{
       parts: [
         { inlineData: { data: imageBase64, mimeType: imageMimeType } },
@@ -101,7 +101,7 @@ export const applyStyle = async (
   styleBase64: string,
   styleMimeType: string,
 ): Promise<{ base64: string; mimeType: string }> => {
-  const data = await callGemini('gemini-2.5-flash-image', {
+  const data = await callGemini('gemini-3.1-flash-image-preview', {
     contents: [{
       parts: [
         { inlineData: { data: roomBase64, mimeType: roomMimeType } },
@@ -121,7 +121,7 @@ export const applyPanelling = async (
   height: string,
   colorDescription: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  const data = await callGemini('gemini-2.5-flash-image', {
+  const data = await callGemini('gemini-3.1-flash-image-preview', {
     contents: [{
       parts: [
         { inlineData: { data: roomBase64, mimeType: roomMimeType } },
@@ -155,7 +155,7 @@ export const editText = async (
     - ONLY change the specific objects or areas requested.
   `;
 
-  const data = await callGemini('gemini-2.5-flash-image', {
+  const data = await callGemini('gemini-3.1-flash-image-preview', {
     contents: [{
       parts: [
         { inlineData: { data: imageBase64, mimeType: imageMimeType } },
@@ -194,7 +194,7 @@ export const implementDesignIdeas = async (
 ): Promise<{ base64: string; mimeType: string }> => {
   const enhancedPrompt = `Implement: ${idea}. **DESIGN LOCKDOWN:** Preserve the current wall colors/patterns and floor exactly as they are. Only add new elements.`;
 
-  const data = await callGemini('gemini-2.5-flash-image', {
+  const data = await callGemini('gemini-3.1-flash-image-preview', {
     contents: [{
       parts: [
         { inlineData: { data: roomBase64, mimeType: roomMimeType } },

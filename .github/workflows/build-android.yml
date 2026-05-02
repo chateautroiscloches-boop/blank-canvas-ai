@@ -53,8 +53,8 @@ jobs:
               applicationId "com.blankcanvas.ai"
               minSdkVersion 24
               targetSdkVersion 36
-              versionCode 18
-              versionName "1.1.8"
+              versionCode 19
+              versionName "1.1.9"
             }
             buildTypes {
               release {
@@ -94,6 +94,10 @@ jobs:
             logger.info("google-services.json not found, not applying google-services plugin")
           }
           GRADLE
+      - name: Verify build.gradle
+        run: |
+          echo "--- Verifying targetSdkVersion ---"
+          grep -i "targetSdk" android/app/build.gradle
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore

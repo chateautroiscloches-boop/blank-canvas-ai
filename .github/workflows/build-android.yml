@@ -15,6 +15,10 @@ jobs:
         with:
           java-version: "21"
           distribution: temurin
+      - name: Clean previous build artifacts
+        run: |
+          rm -rf android
+          rm -rf node_modules
       - run: npm install
       - run: npm run build
       - run: npm install -g @capacitor/cli
@@ -46,4 +50,79 @@ jobs:
         run: |
           cat > android/app/build.gradle << 'GRADLE'
           apply plugin: 'com.android.application'
-          androi
+          android {
+            namespace "com.blankcanvas.ai"
+            compileSdk 36
+            defaultConfig {
+              applicationId "com.blankcanvas.ai"
+              minSdkVersion 24
+              targetSdkVersion 36
+              versionCode 20
+              versionName "1.2.0"
+            }
+            buildTypes {
+              release {
+                minifyEnabled false
+                proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+              }
+            }
+            compileOptions {
+              sourceCompatibility JavaVersion.VERSION_21
+              targetCompatibility JavaVersion.VERSION_21
+            }
+          }
+          repositories {
+            flatDir {
+              dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+            }
+          }
+          dependencies {
+            implementation fileTree(include: ['*.jar'], dir: 'libs')
+            implementation project(':capacitor-android')
+            implementation project(':capacitor-app')
+            implementation project(':capacitor-camera')
+            implementation project(':capacitor-haptics')
+            implementation project(':capacitor-keyboard')
+            implementation project(':capacitor-status-bar')
+            implementation 'androidx.core:core-splashscreen:1.0.1'
+            implementation 'androidx.appcompat:appcompat:1.6.1'
+            implementation 'androidx.webkit:webkit:1.8.0'
+          }
+          apply from: 'capacitor.build.gradle'
+          try {
+            def servicesJSON = file('google-services.json')
+            if (servicesJSON.text) {
+              apply plugin: 'com.google.gms.google-services'
+            }
+          } catch(Exception e) {
+            logger.info("google-services.json not found, not applying google-services plugin")
+          }
+          GRADLE
+      - name: Check final targetSdk
+        run: |
+          echo "=== app/build.gradle ==="
+          cat android/app/build.gradle
+          echo "=== capacitor.build.gradle ==="
+          cat android/app/capacitor.build.gradle || echo "not found"
+          echo "=== Searching all gradle files for targetSdk ==="
+          grep -r "targetSdk" android/ || echo "none found"
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore
+      - name: Build Signed AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew bundleRelease \
+            -Pandroid.injected.signing.store.file=$GITHUB_WORKSPACE/android/app/release.keystore \
+            -Pandroid.injected.signing.store.password="$KEYSTORE_PASSWORD" \
+            -Pandroid.injected.signing.key.alias="$KEY_ALIAS" \
+            -Pandroid.injected.signing.key.password="$KEY_PASSWORD"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blank-canvas-ai-release
+          path: android/app/build/outputs/bundle/release/app-release.aab

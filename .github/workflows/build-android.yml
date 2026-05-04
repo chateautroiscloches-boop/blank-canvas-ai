@@ -57,8 +57,8 @@ jobs:
               applicationId "com.blankcanvas.ai"
               minSdkVersion 24
               targetSdkVersion 36
-              versionCode 20
-              versionName "1.2.0"
+              versionCode 21
+              versionName "1.2.1"
             }
             buildTypes {
               release {
@@ -98,14 +98,6 @@ jobs:
             logger.info("google-services.json not found, not applying google-services plugin")
           }
           GRADLE
-      - name: Check final targetSdk
-        run: |
-          echo "=== app/build.gradle ==="
-          cat android/app/build.gradle
-          echo "=== capacitor.build.gradle ==="
-          cat android/app/capacitor.build.gradle || echo "not found"
-          echo "=== Searching all gradle files for targetSdk ==="
-          grep -r "targetSdk" android/ || echo "none found"
       - name: Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/release.keystore

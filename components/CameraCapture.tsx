@@ -57,7 +57,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
       canvas.height = video.videoHeight;
       const context = canvas.getContext('2d');
       if (context) {
-        // Apply zoom to canvas capture
         const scale = zoom;
         const scaledWidth = canvas.width / scale;
         const scaledHeight = canvas.height / scale;
@@ -102,7 +101,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
 
   return (
     <div className="w-full h-full bg-black relative overflow-hidden">
-      {/* Video with digital zoom via CSS transform */}
       <video 
         ref={videoRef} 
         autoPlay 
@@ -114,7 +112,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
       <div className="absolute inset-0 flex flex-col justify-end items-center p-4 bg-black/30">
         
         {/* Zoom Slider */}
-        <div className="w-full max-w-xs mb-4 px-2">
+        <div className="w-full max-w-xs mb-3 px-2">
           <div className="flex items-center justify-between mb-1">
             <span className="text-white text-xs">Wide</span>
             <span className="text-white text-xs font-bold">{zoom.toFixed(1)}x</span>
@@ -163,6 +161,11 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
             </button>
           </div>
         </div>
+
+        {/* Tip Message */}
+        <p className="text-white/70 text-xs text-center mb-3 px-4">
+          💡 Tip: For wider room shots, step back before taking your photo
+        </p>
 
         {/* Capture Button */}
         <button

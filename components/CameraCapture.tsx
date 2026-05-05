@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 interface CameraCaptureProps {
@@ -9,6 +8,11 @@ interface CameraCaptureProps {
 const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [zoom, setZoom] = useState(1);
+  const [maxZoom, setMaxZoom] = useState(1);
+  const [minZoom, setMinZoom] = useState(1);
+  const [zoomSupported, setZoomSupported] = useState(false);
+  const trackRef = useRef<MediaStreamTrack | null>(null);
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -19,11 +23,31 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           throw new Error("Camera not supported on this browser.");
         }
-        // Prefer the rear-facing camera on mobile devices
-        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            facingMode: 'environment',
+            width: { ideal: 3840 },
+            height: { ideal: 2160 }
+          } 
+        });
+        
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           videoRef.current.play();
+        }
+
+        // Check if zoom is supported
+        const track = stream.getVideoTracks()[0];
+        trackRef.current = track;
+        const capabilities = track.getCapabilities() as any;
+        
+        if (capabilities.zoom) {
+          setZoomSupported(true);
+          setMinZoom(capabilities.zoom.min || 1);
+          setMaxZoom(capabilities.zoom.max || 5);
+          setZoom(capabilities.zoom.min || 1);
+          // Start at widest angle
+          await track.applyConstraints({ advanced: [{ zoom: capabilities.zoom.min }] } as any);
         }
       } catch (err) {
         console.error("Camera access was denied or an error occurred.", err);
@@ -33,7 +57,6 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
 
     openCamera();
 
-    // Cleanup function to stop the camera stream when the component unmounts
     return () => {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -42,7 +65,18 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
         videoRef.current.srcObject = null;
       }
     };
-  }, []); // Empty dependency array ensures this runs only on mount and unmount
+  }, []);
+
+  const handleZoomChange = useCallback(async (newZoom: number) => {
+    setZoom(newZoom);
+    if (trackRef.current && zoomSupported) {
+      try {
+        await trackRef.current.applyConstraints({ advanced: [{ zoom: newZoom }] } as any);
+      } catch (err) {
+        console.error("Zoom error:", err);
+      }
+    }
+  }, [zoomSupported]);
 
   const handleCapture = useCallback(() => {
     const video = videoRef.current;
@@ -72,14 +106,14 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
         <p className="text-sm font-semibold">Camera Error</p>
         <p className="text-xs mt-1">{error}</p>
         <button
-            type="button"
-            onClick={onClose}
-            className="absolute top-2 right-2 p-2 bg-gray-900/50 rounded-full text-white hover:bg-gray-800/70"
-            aria-label="Close camera"
+          type="button"
+          onClick={onClose}
+          className="absolute top-2 right-2 p-2 bg-gray-900/50 rounded-full text-white hover:bg-gray-800/70"
+          aria-label="Close camera"
         >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          </svg>
         </button>
       </div>
     );
@@ -88,7 +122,56 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
   return (
     <div className="w-full h-full bg-black relative">
       <video ref={videoRef} autoPlay playsInline className="w-full h-full object-contain" />
+      
       <div className="absolute inset-0 flex flex-col justify-end items-center p-4 bg-black/30">
+        
+        {/* Zoom Slider */}
+        {zoomSupported && (
+          <div className="w-full max-w-xs mb-4 px-2">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-white text-xs">Wide</span>
+              <span className="text-white text-xs font-bold">{zoom.toFixed(1)}x</span>
+              <span className="text-white text-xs">Zoom</span>
+            </div>
+            <input
+              type="range"
+              min={minZoom}
+              max={maxZoom}
+              step={0.1}
+              value={zoom}
+              onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
+              className="w-full h-2 rounded-full appearance-none cursor-pointer"
+              style={{
+                background: `linear-gradient(to right, #d4a853 0%, #d4a853 ${((zoom - minZoom) / (maxZoom - minZoom)) * 100}%, #ffffff40 ${((zoom - minZoom) / (maxZoom - minZoom)) * 100}%, #ffffff40 100%)`
+              }}
+            />
+            <div className="flex justify-between mt-1">
+              <button
+                type="button"
+                onClick={() => handleZoomChange(minZoom)}
+                className="text-white text-xs bg-white/20 rounded px-2 py-1 hover:bg-white/30"
+              >
+                0.5x
+              </button>
+              <button
+                type="button"
+                onClick={() => handleZoomChange(1)}
+                className="text-white text-xs bg-white/20 rounded px-2 py-1 hover:bg-white/30"
+              >
+                1x
+              </button>
+              <button
+                type="button"
+                onClick={() => handleZoomChange(Math.min(2, maxZoom))}
+                className="text-white text-xs bg-white/20 rounded px-2 py-1 hover:bg-white/30"
+              >
+                2x
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Capture Button */}
         <button
           type="button"
           onClick={handleCapture}
@@ -100,6 +183,8 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
             <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0ZM18.75 10.5h.008v.008h-.008V10.5Z" />
           </svg>
         </button>
+
+        {/* Close Button */}
         <button
           type="button"
           onClick={onClose}

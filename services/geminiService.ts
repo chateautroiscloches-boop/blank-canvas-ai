@@ -51,7 +51,7 @@ export const applyPaintColor = async (
       if (brand && name) {
         colorPrompt = `You are a professional paint colour matcher. Verify the exact HEX code for "${name}" by ${brand}. Return ONLY a single 6-digit HEX code (e.g. #C4AFB1).`;
       } else {
-        colorPrompt = `Provide a PRECISE HEX code for: "${colorQuery}". "Cream" MUST be warm and yellow-toned (#F3E5AB). "Navy" or "Dark Blue" MUST be visibly blue (#121F33). "Burgundy" MUST be a deep, saturated wine-red (#800020). Return ONLY the HEX code.`;
+        colorPrompt = `Provide a PRECISE HEX code for: "${colorQuery}". "Cream" MUST be warm and yellow-toned (#F3E5AB). "Navy" or "Dark Blue" MUST be visibly blue (#121F33). "Burgundy" MUST be a deep, saturated wine-red (#800020). "Bright Yellow" MUST be a vivid yellow (#FFD700). Return ONLY the HEX code.`;
       }
 
       const colorData = await callGemini('gemini-2.5-flash', {
@@ -67,14 +67,22 @@ export const applyPaintColor = async (
   const recolorPrompt = `TASK: Repaint ONLY the walls of this room with HEX colour: ${hexColor}.
 
 **STRICT RULES - MANDATORY:**
-- ONLY change the colour of wall surfaces.
+- ONLY change the colour of wall surfaces. Nothing else.
 - Do NOT paint the ceiling — leave it exactly as it is.
-- DO NOT change the colour of ANY furniture, sofas, chairs, cushions, rugs, curtains, lamps, artwork, plants, floors, or any other objects in the room.
-- All furniture, objects and the ceiling must remain EXACTLY as they appear in the original image — same colour, same texture, same material.
+- Do NOT add any architectural features, dado rails, picture rails, borders, stripes or decorative elements that do not already exist in the original image.
+- Do NOT modify or add any wall features — paint the walls as flat smooth surfaces in the exact HEX colour specified.
+- The HEX colour ${hexColor} is the user's deliberate choice — apply it exactly. Do NOT substitute a different colour even if it seems unusual.
+- DO NOT change the colour, pattern or texture of ANY of the following — this is an absolute rule:
+  * Furniture (sofas, chairs, tables, shelves)
+  * Soft furnishings (cushions, throws, blankets)
+  * Window treatments (curtains, blinds, shutters) — leave these EXACTLY as they are including colour and pattern
+  * Floor coverings (rugs, carpets, wooden floors, tiles)
+  * Lighting (lamps, pendants, spotlights)
+  * Artwork, mirrors, plants, decorative objects
+  * Doors, windows and door frames
+- Every single object in the room must look IDENTICAL to the original image except the wall colour.
 - Apply the paint colour with 100% opacity on walls only.
 - Maintain realistic lighting, shadows and depth on the walls.
-- Ensure Burgundy and Navy are RICH and SATURATED, not black.
-- Ensure Cream is WARM and BUTTERY, not white.
 - Output ONLY the final image.`;
 
   const data = await callGemini('gemini-3.1-flash-image-preview', {
@@ -122,8 +130,15 @@ export const applyStyle = async (
 **STRICT RULES - MANDATORY:**
 - Apply wallpaper to wall surfaces ONLY.
 - Do NOT apply wallpaper to the ceiling — leave it exactly as it is.
-- DO NOT change the colour or appearance of any furniture, sofas, chairs, cushions, rugs, curtains, lamps, artwork, plants, floors or any other objects.
-- All furniture, objects and the ceiling must remain EXACTLY as they appear in the original image.
+- DO NOT change the colour, pattern or texture of ANY of the following:
+  * Furniture (sofas, chairs, tables, shelves)
+  * Soft furnishings (cushions, throws, blankets)
+  * Window treatments (curtains, blinds, shutters) — leave these EXACTLY as they are
+  * Floor coverings (rugs, carpets, wooden floors, tiles)
+  * Lighting (lamps, pendants, spotlights)
+  * Artwork, mirrors, plants, decorative objects
+  * Doors, windows and door frames
+- Every single object must look IDENTICAL to the original image except the walls.
 - Maintain realistic scale and perspective of the wallpaper pattern.
 - Output ONLY the final image.` },
       ],
@@ -149,8 +164,15 @@ export const applyPanelling = async (
 **STRICT RULES - MANDATORY:**
 - Add panelling to wall surfaces ONLY.
 - Do NOT apply panelling to the ceiling — leave it exactly as it is.
-- DO NOT change the colour or appearance of any furniture, sofas, chairs, cushions, rugs, curtains, lamps, artwork, plants, floors or any other objects.
-- All furniture, objects and the ceiling must remain EXACTLY as they appear in the original image.
+- DO NOT change the colour, pattern or texture of ANY of the following:
+  * Furniture (sofas, chairs, tables, shelves)
+  * Soft furnishings (cushions, throws, blankets)
+  * Window treatments (curtains, blinds, shutters) — leave these EXACTLY as they are
+  * Floor coverings (rugs, carpets, wooden floors, tiles)
+  * Lighting (lamps, pendants, spotlights)
+  * Artwork, mirrors, plants, decorative objects
+  * Doors, windows and door frames
+- Every single object must look IDENTICAL to the original image except the walls.
 - Use realistic wood texture and shadow depth on the panelling.
 - Output ONLY the final image.` },
       ],
@@ -174,12 +196,12 @@ export const editText = async (
     ${!isChangingWalls ? `
     - The WALLS, CEILING and TRIM are DELIBERATE DESIGN CHOICES. DO NOT change them.
     - DO NOT change the colour, pattern, or saturation of the walls, ceiling or skirting.
-    - DO NOT change the colour of any furniture, cushions, rugs, curtains or other objects unless explicitly asked.
+    - DO NOT change the colour, pattern or texture of any furniture, cushions, rugs, curtains, blinds or other objects unless explicitly asked.
     - Treat wall surfaces, ceiling and all existing furniture as PROTECTED LAYERS.
     ` : `
     - If modifying wall/trim colour: Use DESTRUCTIVE OVERWRITE on walls only. Replace with 100% opacity.
     - Do NOT paint the ceiling unless explicitly asked.
-    - DO NOT change furniture, cushions, rugs or other objects.
+    - DO NOT change furniture, cushions, rugs, curtains or other objects.
     - "Cream" = Buttery warm. "Burgundy" = Deep saturated red. "Navy" = Visible blue.
     `}
     - Maintain consistent lighting and photo-realism.
@@ -227,7 +249,7 @@ export const implementDesignIdeas = async (
 
 **DESIGN LOCKDOWN - MANDATORY:**
 - Preserve the current wall colours, patterns, ceiling and floor EXACTLY as they are.
-- DO NOT change the colour of any existing furniture, cushions, rugs or other objects.
+- DO NOT change the colour, pattern or texture of any existing furniture, cushions, rugs, curtains, blinds or other objects.
 - Only ADD the new requested elements to the scene.
 - Output ONLY the final image.`;
 

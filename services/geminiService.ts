@@ -64,7 +64,18 @@ export const applyPaintColor = async (
     }
   }
 
-  const recolorPrompt = `TASK: Paint EVERY visible wall and trim surface in this room HEX: ${hexColor}. REPLACE existing pigments with 100% OPACITY. Separate COLOR from LIGHTING. Ensure Burgundy and Navy are RICH and SATURATED, not black. Ensure Cream is WARM and BUTTERY, not white. Output ONLY the image.`;
+  const recolorPrompt = `TASK: Repaint ONLY the walls of this room with HEX colour: ${hexColor}.
+
+**STRICT RULES - MANDATORY:**
+- ONLY change the colour of wall surfaces.
+- Do NOT paint the ceiling — leave it exactly as it is.
+- DO NOT change the colour of ANY furniture, sofas, chairs, cushions, rugs, curtains, lamps, artwork, plants, floors, or any other objects in the room.
+- All furniture, objects and the ceiling must remain EXACTLY as they appear in the original image — same colour, same texture, same material.
+- Apply the paint colour with 100% opacity on walls only.
+- Maintain realistic lighting, shadows and depth on the walls.
+- Ensure Burgundy and Navy are RICH and SATURATED, not black.
+- Ensure Cream is WARM and BUTTERY, not white.
+- Output ONLY the final image.`;
 
   const data = await callGemini('gemini-3.1-flash-image-preview', {
     contents: [{
@@ -106,7 +117,15 @@ export const applyStyle = async (
       parts: [
         { inlineData: { data: roomBase64, mimeType: roomMimeType } },
         { inlineData: { data: styleBase64, mimeType: styleMimeType } },
-        { text: 'Wallpaper EVERY SINGLE wall in this image with the provided pattern. 100% coverage. Maintain scale and perspective. Output ONLY image.' },
+        { text: `Apply the provided wallpaper pattern to EVERY wall surface in this room.
+
+**STRICT RULES - MANDATORY:**
+- Apply wallpaper to wall surfaces ONLY.
+- Do NOT apply wallpaper to the ceiling — leave it exactly as it is.
+- DO NOT change the colour or appearance of any furniture, sofas, chairs, cushions, rugs, curtains, lamps, artwork, plants, floors or any other objects.
+- All furniture, objects and the ceiling must remain EXACTLY as they appear in the original image.
+- Maintain realistic scale and perspective of the wallpaper pattern.
+- Output ONLY the final image.` },
       ],
     }],
     generationConfig: { responseModalities: ['IMAGE'] },
@@ -125,7 +144,15 @@ export const applyPanelling = async (
     contents: [{
       parts: [
         { inlineData: { data: roomBase64, mimeType: roomMimeType } },
-        { text: `Add ${style} wall panelling to ${height} of ALL walls. Color: ${colorDescription}. Real wood texture. Output ONLY image.` },
+        { text: `Add ${style} wall panelling to ${height} of ALL walls in colour: ${colorDescription}.
+
+**STRICT RULES - MANDATORY:**
+- Add panelling to wall surfaces ONLY.
+- Do NOT apply panelling to the ceiling — leave it exactly as it is.
+- DO NOT change the colour or appearance of any furniture, sofas, chairs, cushions, rugs, curtains, lamps, artwork, plants, floors or any other objects.
+- All furniture, objects and the ceiling must remain EXACTLY as they appear in the original image.
+- Use realistic wood texture and shadow depth on the panelling.
+- Output ONLY the final image.` },
       ],
     }],
     generationConfig: { responseModalities: ['IMAGE'] },
@@ -142,17 +169,21 @@ export const editText = async (
 
   const enhancedPrompt = `
     TASK: ${prompt}
+    
     **DESIGN LOCKDOWN DIRECTIVE (MANDATORY):**
     ${!isChangingWalls ? `
-    - The WALLS and TRIM are DELIBERATE DESIGN CHOICES.
-    - DO NOT change the color, pattern, or saturation of the walls or skirting.
-    - Treat wall surfaces as a PROTECTED LAYER.
+    - The WALLS, CEILING and TRIM are DELIBERATE DESIGN CHOICES. DO NOT change them.
+    - DO NOT change the colour, pattern, or saturation of the walls, ceiling or skirting.
+    - DO NOT change the colour of any furniture, cushions, rugs, curtains or other objects unless explicitly asked.
+    - Treat wall surfaces, ceiling and all existing furniture as PROTECTED LAYERS.
     ` : `
-    - If modifying wall/trim color: Use DESTRUCTIVE OVERWRITE. Replace with 100% opacity.
+    - If modifying wall/trim colour: Use DESTRUCTIVE OVERWRITE on walls only. Replace with 100% opacity.
+    - Do NOT paint the ceiling unless explicitly asked.
+    - DO NOT change furniture, cushions, rugs or other objects.
     - "Cream" = Buttery warm. "Burgundy" = Deep saturated red. "Navy" = Visible blue.
     `}
     - Maintain consistent lighting and photo-realism.
-    - ONLY change the specific objects or areas requested.
+    - ONLY change the specific objects or areas explicitly requested.
   `;
 
   const data = await callGemini('gemini-3.1-flash-image-preview', {
@@ -192,7 +223,13 @@ export const implementDesignIdeas = async (
   roomMimeType: string,
   idea: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  const enhancedPrompt = `Implement: ${idea}. **DESIGN LOCKDOWN:** Preserve the current wall colors/patterns and floor exactly as they are. Only add new elements.`;
+  const enhancedPrompt = `Implement: ${idea}.
+
+**DESIGN LOCKDOWN - MANDATORY:**
+- Preserve the current wall colours, patterns, ceiling and floor EXACTLY as they are.
+- DO NOT change the colour of any existing furniture, cushions, rugs or other objects.
+- Only ADD the new requested elements to the scene.
+- Output ONLY the final image.`;
 
   const data = await callGemini('gemini-3.1-flash-image-preview', {
     contents: [{

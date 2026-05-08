@@ -8,7 +8,6 @@ interface CameraCaptureProps {
 const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(1);
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -57,16 +56,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
       canvas.height = video.videoHeight;
       const context = canvas.getContext('2d');
       if (context) {
-        const scale = zoom;
-        const scaledWidth = canvas.width / scale;
-        const scaledHeight = canvas.height / scale;
-        const offsetX = (canvas.width - scaledWidth) / 2;
-        const offsetY = (canvas.height - scaledHeight) / 2;
-        context.drawImage(
-          video,
-          offsetX, offsetY, scaledWidth, scaledHeight,
-          0, 0, canvas.width, canvas.height
-        );
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
         canvas.toBlob(blob => {
           if (blob) {
             const file = new File([blob], `capture-${Date.now()}.jpg`, { type: 'image/jpeg' });
@@ -75,7 +65,7 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
         }, 'image/jpeg', 0.95);
       }
     }
-  }, [onCapture, zoom]);
+  }, [onCapture]);
   
   if (error) {
     return (
@@ -105,65 +95,13 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ onCapture, onClose }) => 
         ref={videoRef} 
         autoPlay 
         playsInline 
-        className="w-full h-full object-contain transition-transform duration-100"
-        style={{ transform: `scale(${zoom})` }}
+        className="w-full h-full object-contain"
       />
       
       <div className="absolute inset-0 flex flex-col justify-end items-center p-4 bg-black/30">
-        
-        {/* Zoom Slider */}
-        <div className="w-full max-w-xs mb-3 px-2">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-white text-xs">Wide</span>
-            <span className="text-white text-xs font-bold">{zoom.toFixed(1)}x</span>
-            <span className="text-white text-xs">Zoom</span>
-          </div>
-          <input
-            type="range"
-            min={1}
-            max={3}
-            step={0.1}
-            value={zoom}
-            onChange={(e) => setZoom(parseFloat(e.target.value))}
-            className="w-full h-2 rounded-full appearance-none cursor-pointer"
-            style={{
-              background: `linear-gradient(to right, #d4a853 0%, #d4a853 ${((zoom - 1) / 2) * 100}%, #ffffff40 ${((zoom - 1) / 2) * 100}%, #ffffff40 100%)`
-            }}
-          />
-          <div className="flex justify-between mt-2">
-            <button
-              type="button"
-              onClick={() => setZoom(1)}
-              className={`text-white text-xs rounded px-2 py-1 transition-all ${zoom === 1 ? 'bg-gold text-background font-bold' : 'bg-white/20 hover:bg-white/30'}`}
-            >
-              1x
-            </button>
-            <button
-              type="button"
-              onClick={() => setZoom(1.5)}
-              className={`text-white text-xs rounded px-2 py-1 transition-all ${zoom === 1.5 ? 'bg-gold text-background font-bold' : 'bg-white/20 hover:bg-white/30'}`}
-            >
-              1.5x
-            </button>
-            <button
-              type="button"
-              onClick={() => setZoom(2)}
-              className={`text-white text-xs rounded px-2 py-1 transition-all ${zoom === 2 ? 'bg-gold text-background font-bold' : 'bg-white/20 hover:bg-white/30'}`}
-            >
-              2x
-            </button>
-            <button
-              type="button"
-              onClick={() => setZoom(3)}
-              className={`text-white text-xs rounded px-2 py-1 transition-all ${zoom === 3 ? 'bg-gold text-background font-bold' : 'bg-white/20 hover:bg-white/30'}`}
-            >
-              3x
-            </button>
-          </div>
-        </div>
 
         {/* Tip Message */}
-        <p className="text-white/70 text-xs text-center mb-3 px-4">
+        <p className="text-white/70 text-xs text-center mb-4 px-4">
           💡 Tip: For wider room shots, step back before taking your photo
         </p>
 

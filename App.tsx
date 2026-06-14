@@ -608,11 +608,11 @@ const App: React.FC = () => {
             <Header />
 
             {/* Usage Notice Banner */}
-            <div className="bg-surface border-b border-border/50 px-4 py-2">
-              <p className="text-center text-xs text-text-secondary">
-                🎨 Free plan: <span className="text-gold font-semibold">{Math.max(0, remainingGenerations)} of {WEEKLY_LIMIT} designs remaining</span> this week. Resets every 7 days.
-              </p>
-            </div>
+<div className="bg-surface border-b border-border/50 px-4 py-3">
+  <p className="text-center text-sm text-text-secondary">
+    🎨 Free plan: <span className="text-gold font-semibold">{Math.max(0, remainingGenerations)} of {WEEKLY_LIMIT} designs remaining</span> this week. Resets every 7 days.
+  </p>
+</div>
 
             <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-12">
                 <div className="mb-8"><TabSelector activeTab={activeTab} onTabChange={handleTabChange} /></div>

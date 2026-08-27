@@ -28,7 +28,7 @@ jobs:
         run: |
           find android -name "*.gradle" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
           find android -name "AndroidManifest.xml" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
-          sed -i '/<uses-permission android:name="android.permission.INTERNET"/a\    <uses-permission android:name="com.google.android.gms.permission.AD_ID"\/>\n    <uses-permission android:name="android.permission.CAMERA"\/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"\/>' android/app/src/main/AndroidManifest.xml
+          sed -i '/<uses-permission android:name="android.permission.INTERNET"/a\    <uses-permission android:name="com.google.android.gms.permission.AD_ID"\/>\n    <uses-permission android:name="android.permission.CAMERA"\/>\n    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"\/>/' android/app/src/main/AndroidManifest.xml
       - name: Update AGP and Java version globally
         run: |
           sed -i "s/com.android.tools.build:gradle:[0-9.]*/com.android.tools.build:gradle:8.9.1/" android/build.gradle

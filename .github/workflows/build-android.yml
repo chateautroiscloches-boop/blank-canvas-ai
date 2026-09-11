@@ -15,35 +15,47 @@ jobs:
         with:
           java-version: "21"
           distribution: temurin
-      - name: Install ImageMagick
-        run: sudo apt-get install -y imagemagick
       - name: Clean previous build artifacts
         run: |
           rm -rf android
           rm -rf node_modules
       - run: npm install
+      - name: Install sharp for icon resizing
+        run: npm install sharp
       - run: npm run build
       - run: npm install -g @capacitor/cli
       - run: npx cap add android
       - run: npx cap sync android
       - name: Set app icon
         run: |
-          which convert || apt-get install -y imagemagick
-          mkdir -p android/app/src/main/res/mipmap-xxxhdpi
-          mkdir -p android/app/src/main/res/mipmap-xxhdpi
-          mkdir -p android/app/src/main/res/mipmap-xhdpi
-          mkdir -p android/app/src/main/res/mipmap-hdpi
-          mkdir -p android/app/src/main/res/mipmap-mdpi
-          /usr/bin/convert public/icon.png -resize 192x192 android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-          /usr/bin/convert public/icon.png -resize 144x144 android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-          /usr/bin/convert public/icon.png -resize 96x96 android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
-          /usr/bin/convert public/icon.png -resize 72x72 android/app/src/main/res/mipmap-hdpi/ic_launcher.png
-          /usr/bin/convert public/icon.png -resize 48x48 android/app/src/main/res/mipmap-mdpi/ic_launcher.png
-          cp android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
-          cp android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
-          cp android/app/src/main/res/mipmap-xhdpi/ic_launcher.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
-          cp android/app/src/main/res/mipmap-hdpi/ic_launcher.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
-          cp android/app/src/main/res/mipmap-mdpi/ic_launcher.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          node << 'EOF'
+          const sharp = require('sharp');
+          const path = require('path');
+          const fs = require('fs');
+          
+          const sizes = [
+            { dir: 'mipmap-mdpi', size: 48 },
+            { dir: 'mipmap-hdpi', size: 72 },
+            { dir: 'mipmap-xhdpi', size: 96 },
+            { dir: 'mipmap-xxhdpi', size: 144 },
+            { dir: 'mipmap-xxxhdpi', size: 192 },
+          ];
+          
+          const source = 'public/icon.png';
+          const base = 'android/app/src/main/res';
+          
+          async function generateIcons() {
+            for (const { dir, size } of sizes) {
+              const outDir = path.join(base, dir);
+              fs.mkdirSync(outDir, { recursive: true });
+              await sharp(source).resize(size, size).toFile(path.join(outDir, 'ic_launcher.png'));
+              await sharp(source).resize(size, size).toFile(path.join(outDir, 'ic_launcher_round.png'));
+              console.log(`Generated ${size}x${size} icon in ${dir}`);
+            }
+          }
+          
+          generateIcons().catch(console.error);
+          EOF
       - name: Update package name and manifest
         run: |
           find android -name "*.gradle" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
@@ -77,8 +89,8 @@ jobs:
               applicationId "com.blankcanvas.ai"
               minSdkVersion 24
               targetSdkVersion 36
-              versionCode 26
-              versionName "1.2.6"
+              versionCode 27
+              versionName "1.2.7"
             }
             buildTypes {
               release {

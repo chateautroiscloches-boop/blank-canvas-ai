@@ -20,42 +20,23 @@ jobs:
           rm -rf android
           rm -rf node_modules
       - run: npm install
-      - name: Install sharp for icon resizing
-        run: npm install sharp
+      - name: Install sharp and capacitor assets
+        run: |
+          npm install sharp
+          npm install @capacitor/assets --save-dev
       - run: npm run build
       - run: npm install -g @capacitor/cli
-      - run: npx cap add android
-      - run: npx cap sync android
-      - name: Set app icon
+      - name: Set up icon resources
         run: |
-          node << 'EOF'
-          const sharp = require('sharp');
-          const path = require('path');
-          const fs = require('fs');
-          
-          const sizes = [
-            { dir: 'mipmap-mdpi', size: 48 },
-            { dir: 'mipmap-hdpi', size: 72 },
-            { dir: 'mipmap-xhdpi', size: 96 },
-            { dir: 'mipmap-xxhdpi', size: 144 },
-            { dir: 'mipmap-xxxhdpi', size: 192 },
-          ];
-          
-          const source = 'public/icon.png';
-          const base = 'android/app/src/main/res';
-          
-          async function generateIcons() {
-            for (const { dir, size } of sizes) {
-              const outDir = path.join(base, dir);
-              fs.mkdirSync(outDir, { recursive: true });
-              await sharp(source).resize(size, size).toFile(path.join(outDir, 'ic_launcher.png'));
-              await sharp(source).resize(size, size).toFile(path.join(outDir, 'ic_launcher_round.png'));
-              console.log(`Generated ${size}x${size} icon in ${dir}`);
-            }
-          }
-          
-          generateIcons().catch(console.error);
-          EOF
+          mkdir -p resources/android
+          mkdir -p resources/ios
+          cp public/icon.png resources/android/icon.png
+          cp public/icon.png resources/android/icon-foreground.png
+          cp public/icon.png resources/ios/icon.png
+      - run: npx cap add android
+      - name: Generate icons with Capacitor Assets
+        run: npx capacitor-assets generate --android
+      - run: npx cap sync android
       - name: Update package name and manifest
         run: |
           find android -name "*.gradle" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
@@ -89,8 +70,8 @@ jobs:
               applicationId "com.blankcanvas.ai"
               minSdkVersion 24
               targetSdkVersion 36
-              versionCode 27
-              versionName "1.2.7"
+              versionCode 28
+              versionName "1.2.8"
             }
             buildTypes {
               release {

@@ -26,17 +26,18 @@ jobs:
           npm install @capacitor/assets --save-dev
       - run: npm run build
       - run: npm install -g @capacitor/cli
-      - name: Set up icon resources
+      - run: npx cap add android
+      - run: npx cap sync android
+      - name: Set up icon resources and generate
         run: |
           mkdir -p resources/android
           mkdir -p resources/ios
           cp public/icon.png resources/android/icon.png
           cp public/icon.png resources/android/icon-foreground.png
           cp public/icon.png resources/ios/icon.png
-      - run: npx cap add android
-      - name: Generate icons with Capacitor Assets
-        run: npx capacitor-assets generate --android
-      - run: npx cap sync android
+          echo "Resources folder contents:"
+          ls -la resources/android/
+          npx capacitor-assets generate --android
       - name: Update package name and manifest
         run: |
           find android -name "*.gradle" -exec sed -i 's/com.blankcanvasai.app/com.blankcanvas.ai/g' {} \;
@@ -70,8 +71,8 @@ jobs:
               applicationId "com.blankcanvas.ai"
               minSdkVersion 24
               targetSdkVersion 36
-              versionCode 28
-              versionName "1.2.8"
+              versionCode 29
+              versionName "1.2.9"
             }
             buildTypes {
               release {

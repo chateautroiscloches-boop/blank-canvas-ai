@@ -260,34 +260,20 @@ const PaintColourPicker: React.FC<PaintColourPickerProps> = ({
   const currentFamily = PAINT_FAMILIES[activeFamily];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 min-w-0 max-w-full">
 
-      <div>
-        <div className="flex items-end justify-between gap-4 mb-3">
-          <div>
-            <h4 className="text-sm font-medium tracking-wide text-gold">
-              Browse Colours
-            </h4>
-            <p className="text-xs text-text-secondary mt-1">
-              Choose a colour to preview in your room.
-            </p>
-          </div>
-
-          {selectedHex && (
-            <button
-              type="button"
-              onClick={() => {
-                // Deliberately handled by parent when another colour is selected.
-              }}
-              className="text-xs text-text-secondary"
-              aria-hidden="true"
-            >
-              &nbsp;
-            </button>
-          )}
+      <div className="min-w-0">
+        <div className="mb-3">
+          <h4 className="text-sm font-medium tracking-wide text-gold">
+            Browse Colours
+          </h4>
+          <p className="text-xs text-text-secondary mt-1">
+            Choose a colour to preview in your room.
+          </p>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        {/* This scrolls horizontally INSIDE the colour picker only */}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide max-w-full">
           {PAINT_FAMILIES.map((family, index) => (
             <button
               key={family.name}
@@ -309,7 +295,7 @@ const PaintColourPicker: React.FC<PaintColourPickerProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+      <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 min-w-0">
         {currentFamily.colours.map((colour) => {
           const isSelected =
             selectedHex?.toLowerCase() === colour.hex.toLowerCase();
@@ -321,7 +307,7 @@ const PaintColourPicker: React.FC<PaintColourPickerProps> = ({
               onClick={() => onSelect(colour)}
               aria-label={`Select ${colour.name}`}
               title={`${colour.name} ${colour.hex}`}
-              className="group flex flex-col items-center gap-1.5"
+              className="group flex flex-col items-center gap-1.5 min-w-0"
             >
               <span
                 className={`
@@ -347,7 +333,7 @@ const PaintColourPicker: React.FC<PaintColourPickerProps> = ({
 
               <span
                 className={`
-                  text-[10px] leading-tight text-center line-clamp-2
+                  text-[10px] leading-tight text-center line-clamp-2 max-w-full
                   ${
                     isSelected
                       ? 'text-gold font-semibold'
@@ -934,7 +920,7 @@ const App: React.FC = () => {
 
   const renderControls = () => {
     const commonRoomUploader = (
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-1 min-w-0 max-w-full">
         <ImageUploader
           id="room-image"
           label={<FormLabel>1. Your Room</FormLabel>}
@@ -986,13 +972,13 @@ const App: React.FC = () => {
     switch (activeTab) {
       case Tab.WALLPAPER:
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0 max-w-full">
             {commonRoomUploader}
 
-            <div>
+            <div className="min-w-0 max-w-full">
               <FormLabel>2. Choose Wallpaper Style</FormLabel>
 
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 min-w-0">
                 <ImageUploader
                   id="style-image"
                   label=""
@@ -1009,7 +995,7 @@ const App: React.FC = () => {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375 0 0 1 .75 0Z"
+                        d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
                       />
                     </svg>
                   }
@@ -1027,9 +1013,9 @@ const App: React.FC = () => {
                       className="h-3 w-3"
                       fill="none"
                       viewBox="0 0 24 24"
-                      stroke="currentColor"
                     >
                       <path
+                        stroke="currentColor"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
@@ -1054,12 +1040,11 @@ const App: React.FC = () => {
 
       case Tab.PAINT:
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0 max-w-full">
             {commonRoomUploader}
 
-            <div className="space-y-7">
+            <div className="space-y-7 min-w-0 max-w-full">
 
-              {/* Existing upload feature */}
               <div>
                 <FormLabel>2. Upload Paint Colour Sample</FormLabel>
 
@@ -1105,16 +1090,15 @@ const App: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex items-center">
-                <div className="flex-grow border-t border-border" />
-                <span className="flex-shrink mx-4 text-xs text-text-secondary">
+              <div className="flex items-center min-w-0">
+                <div className="flex-grow border-t border-border min-w-0" />
+                <span className="flex-shrink-0 mx-4 text-xs text-text-secondary">
                   OR
                 </span>
-                <div className="flex-grow border-t border-border" />
+                <div className="flex-grow border-t border-border min-w-0" />
               </div>
 
-              {/* Curated colour palette */}
-              <div>
+              <div className="min-w-0 max-w-full">
                 <FormLabel>3. Browse Colours</FormLabel>
 
                 <PaintColourPicker
@@ -1123,8 +1107,8 @@ const App: React.FC = () => {
                 />
 
                 {paintSampleHex && paintNameQuery && (
-                  <div className="mt-5 p-4 rounded-xl border border-gold/40 bg-background/50">
-                    <div className="flex items-center gap-4">
+                  <div className="mt-5 p-4 rounded-xl border border-gold/40 bg-background/50 min-w-0 max-w-full">
+                    <div className="flex items-center gap-4 min-w-0">
                       <div
                         className="w-14 h-14 rounded-lg border border-gold/60 shadow-lg flex-shrink-0"
                         style={{ backgroundColor: paintSampleHex }}
@@ -1146,16 +1130,15 @@ const App: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex items-center">
-                <div className="flex-grow border-t border-border" />
-                <span className="flex-shrink mx-4 text-xs text-text-secondary">
+              <div className="flex items-center min-w-0">
+                <div className="flex-grow border-t border-border min-w-0" />
+                <span className="flex-shrink-0 mx-4 text-xs text-text-secondary">
                   OR
                 </span>
-                <div className="flex-grow border-t border-border" />
+                <div className="flex-grow border-t border-border min-w-0" />
               </div>
 
-              {/* Existing manual input */}
-              <div>
+              <div className="min-w-0 max-w-full">
                 <FormLabel>4. Enter Paint Colour</FormLabel>
 
                 <input
@@ -1172,7 +1155,7 @@ const App: React.FC = () => {
                     }
                   }}
                   placeholder="e.g. Hague Blue or dark green"
-                  className="w-full p-3 bg-background border border-border rounded-lg focus:ring-gold focus:border-gold transition text-text-primary placeholder:text-text-secondary/60"
+                  className="w-full max-w-full min-w-0 p-3 bg-background border border-border rounded-lg focus:ring-gold focus:border-gold transition text-text-primary placeholder:text-text-secondary/60"
                 />
 
                 <p className="text-xs text-text-secondary mt-2">
@@ -1186,32 +1169,32 @@ const App: React.FC = () => {
 
       case Tab.PANELLING:
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0 max-w-full">
             {commonRoomUploader}
 
-            <div>
+            <div className="min-w-0 max-w-full">
               <FormLabel>2. Design Your Panelling</FormLabel>
 
-              <div className="space-y-4">
+              <div className="space-y-4 min-w-0">
                 <div>
                   <h4 className="block text-sm font-medium text-gold mb-2">
                     Style
                   </h4>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-2 min-w-0">
                     {Object.values(PanellingStyle).map((style) => (
                       <button
                         key={style}
                         type="button"
                         onClick={() => setPanellingStyle(style)}
-                        className={`px-3 py-3 h-28 flex flex-col items-center justify-center gap-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        className={`min-w-0 px-3 py-3 h-28 flex flex-col items-center justify-center gap-2 text-sm font-medium rounded-lg transition-all duration-200 ${
                           panellingStyle === style
                             ? 'bg-gold text-background'
                             : 'bg-surface text-text-primary hover:bg-border'
                         }`}
                       >
                         {panellingIcons[style]}
-                        <span className="leading-tight">
+                        <span className="leading-tight text-center">
                           {style}
                         </span>
                       </button>
@@ -1224,13 +1207,13 @@ const App: React.FC = () => {
                     Height
                   </h4>
 
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-2 min-w-0">
                     {Object.values(PanellingHeight).map((height) => (
                       <button
                         key={height}
                         type="button"
                         onClick={() => setPanellingHeight(height)}
-                        className={`px-3 py-2 text-sm font-medium rounded-full transition-all duration-200 ${
+                        className={`min-w-0 px-3 py-2 text-sm font-medium rounded-full transition-all duration-200 ${
                           panellingHeight === height
                             ? 'bg-gold text-background'
                             : 'bg-surface text-text-primary hover:bg-border'
@@ -1242,7 +1225,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <h4 className="block text-sm font-medium text-gold mb-2">
                     Colour
                   </h4>
@@ -1254,7 +1237,7 @@ const App: React.FC = () => {
                       setPanellingColorQuery(e.target.value)
                     }
                     placeholder="e.g. Off-white, dark charcoal grey"
-                    className="w-full p-2 bg-background border border-border rounded-lg focus:ring-gold focus:border-gold transition"
+                    className="w-full max-w-full min-w-0 p-2 bg-background border border-border rounded-lg focus:ring-gold focus:border-gold transition"
                   />
                 </div>
               </div>
@@ -1264,11 +1247,11 @@ const App: React.FC = () => {
 
       case Tab.DESIGN_IDEAS:
         return (
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0 max-w-full">
             {commonRoomUploader}
 
             {originalRoom ? (
-              <div className="space-y-4">
+              <div className="space-y-4 min-w-0 max-w-full">
                 <h3 className="text-2xl font-bold font-serif text-gold">
                   Design Enhancement
                 </h3>
@@ -1282,17 +1265,17 @@ const App: React.FC = () => {
                     type="button"
                     onClick={handleGetDesignIdeas}
                     disabled={isLoading}
-                    className="w-full px-4 py-3 font-bold rounded-full text-lg bg-gradient-to-br from-gold-dark to-gold text-background"
+                    className="w-full max-w-full px-4 py-3 font-bold rounded-full text-lg bg-gradient-to-br from-gold-dark to-gold text-background"
                   >
                     Get Design Ideas
                   </button>
                 ) : (
-                  <div className="space-y-4">
-                    <div className="space-y-2 mt-2">
+                  <div className="space-y-4 min-w-0">
+                    <div className="space-y-2 mt-2 min-w-0">
                       {designIdeas.ideas.map((idea, index) => (
                         <label
                           key={index}
-                          className="flex items-start p-3 bg-surface/50 rounded-lg cursor-pointer hover:bg-border/50 transition-colors"
+                          className="flex items-start min-w-0 p-3 bg-surface/50 rounded-lg cursor-pointer hover:bg-border/50 transition-colors"
                         >
                           <input
                             type="checkbox"
@@ -1300,10 +1283,10 @@ const App: React.FC = () => {
                             onChange={() =>
                               handleIdeaSelectionChange(idea)
                             }
-                            className="mt-1 h-4 w-4 rounded border-gray-300 text-gold focus:ring-gold"
+                            className="mt-1 h-4 w-4 rounded border-gray-300 text-gold focus:ring-gold flex-shrink-0"
                           />
 
-                          <span className="ml-3 text-sm text-text-primary">
+                          <span className="ml-3 min-w-0 text-sm text-text-primary">
                             {idea}
                           </span>
                         </label>
@@ -1317,7 +1300,7 @@ const App: React.FC = () => {
                         isLoading ||
                         selectedIdeas.length === 0
                       }
-                      className="w-full px-4 py-3 font-bold rounded-full text-lg bg-cta-blue text-white"
+                      className="w-full max-w-full px-4 py-3 font-bold rounded-full text-lg bg-cta-blue text-white"
                     >
                       Implement Selected Ideas
                     </button>
@@ -1325,7 +1308,7 @@ const App: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div className="text-center p-4 bg-surface rounded-lg">
+              <div className="text-center p-4 bg-surface rounded-lg min-w-0">
                 <p className="font-semibold font-serif text-gold text-lg">
                   Upload a Room Image
                 </p>
@@ -1340,7 +1323,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-text-primary font-sans flex flex-col relative">
+    <div className="min-h-screen w-full max-w-full min-w-0 overflow-x-hidden bg-background text-text-primary font-sans flex flex-col relative">
 
       {showSplash ? (
         <SplashScreen onFinish={() => setShowSplash(false)} />
@@ -1349,7 +1332,7 @@ const App: React.FC = () => {
           <Header />
 
           {/* Usage Notice Banner */}
-          <div className="bg-surface border-b border-border/50 px-4 py-3">
+          <div className="w-full max-w-full min-w-0 bg-surface border-b border-border/50 px-4 py-3 overflow-x-hidden">
             <p className="text-center text-sm text-text-secondary">
               Free plan:{' '}
               <span className="text-gold font-semibold">
@@ -1359,35 +1342,35 @@ const App: React.FC = () => {
             </p>
           </div>
 
-          <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-12">
+          <main className="flex-grow w-full max-w-full min-w-0 overflow-x-hidden container mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-12">
 
-            <div className="mb-8">
+            <div className="mb-8 min-w-0 max-w-full">
               <TabSelector
                 activeTab={activeTab}
                 onTabChange={handleTabChange}
               />
             </div>
 
-            <div className="grid lg:grid-cols-3 gap-8 h-full">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full w-full max-w-full min-w-0">
 
-              <div className="lg:col-span-1 bg-surface p-6 rounded-xl border border-border/50">
+              <div className="lg:col-span-1 min-w-0 w-full max-w-full bg-surface p-6 rounded-xl border border-border/50">
 
                 {renderControls()}
 
-                <div className="mt-8">
+                <div className="mt-8 min-w-0 max-w-full">
                   {activeTab !== Tab.DESIGN_IDEAS && (
                     <button
                       type="button"
                       onClick={handleSubmit}
                       disabled={isSubmitDisabled}
-                      className="w-full px-4 py-3 font-bold rounded-full text-lg bg-gradient-to-br from-gold-dark to-gold text-background shadow-lg hover:brightness-110 disabled:bg-gold/40"
+                      className="w-full max-w-full px-4 py-3 font-bold rounded-full text-lg bg-gradient-to-br from-gold-dark to-gold text-background shadow-lg hover:brightness-110 disabled:bg-gold/40"
                     >
                       Generate Image
                     </button>
                   )}
 
                   {error && (
-                    <p className="mt-4 text-sm text-red-400 bg-red-900/50 p-3 rounded-md text-center">
+                    <p className="mt-4 text-sm text-red-400 bg-red-900/50 p-3 rounded-md text-center break-words">
                       {error}
                     </p>
                   )}
@@ -1397,7 +1380,7 @@ const App: React.FC = () => {
 
               <div
                 ref={resultRef}
-                className="lg:col-span-2 min-h-[60vh] relative bg-surface border border-border/50 rounded-xl overflow-hidden"
+                className="lg:col-span-2 min-w-0 w-full max-w-full min-h-[60vh] relative bg-surface border border-border/50 rounded-xl overflow-hidden"
               >
                 {isLoading && (
                   <Loader message={loadingMessage} />
@@ -1535,7 +1518,7 @@ const App: React.FC = () => {
               For questions, feedback, or support, please contact:
             </p>
 
-            <p className="text-xl font-bold text-gold py-4">
+            <p className="text-xl font-bold text-gold py-4 break-words">
               Chateautroiscloches@gmail.com
             </p>
           </Modal>

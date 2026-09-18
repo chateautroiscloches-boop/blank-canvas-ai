@@ -216,7 +216,7 @@ const App: React.FC = () => {
           const styleBase64 = await fileToBase64(styleImage);
           const wallpaperSwatch = { base64: styleBase64, mimeType: styleImage.type };
           
-          setLoadingMessage('Analyzing wallpaper pattern...');
+          setLoadingMessage('Analysing wallpaper pattern...');
           const croppedWallpaper = await extractPatternFromImage(wallpaperSwatch.base64, wallpaperSwatch.mimeType);
 
           setLoadingMessage('Applying wallpaper to room...');
@@ -229,7 +229,7 @@ const App: React.FC = () => {
           logPaintSearch(paintNameQuery);
         }
 
-        setLoadingMessage('Analyzing paint color...');
+        setLoadingMessage('Analysing paint color...');
         generatedImage = await applyPaintColor(
             imageSource.base64,
             imageSource.mimeType,

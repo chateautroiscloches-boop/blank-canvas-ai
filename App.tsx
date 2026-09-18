@@ -222,22 +222,22 @@ const PAINT_FAMILIES: PaintFamily[] = [
 const panellingIcons: Record<PanellingStyle, React.ReactNode> = {
   [PanellingStyle.TONGUE_AND_GROOVE]: (
     <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M7 4V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-      <path d="M12 4V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-      <path d="M17 4V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M7 4V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 4V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M17 4V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
   ),
   [PanellingStyle.VICTORIAN]: (
     <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="5" width="16" height="14" rx="1" stroke="currentColor" strokeWidth="2"/>
-      <rect x="7" y="8" width="10" height="8" rx="0.5" stroke="currentColor" strokeWidth="2"/>
+      <rect x="4" y="5" width="16" height="14" rx="1" stroke="currentColor" strokeWidth="2" />
+      <rect x="7" y="8" width="10" height="8" rx="0.5" stroke="currentColor" strokeWidth="2" />
     </svg>
   ),
   [PanellingStyle.SHAKER]: (
     <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="4" width="16" height="16" rx="1" stroke="currentColor" strokeWidth="2"/>
-      <path d="M12 4V20" stroke="currentColor" strokeWidth="2"/>
-      <path d="M4 12H20" stroke="currentColor" strokeWidth="2"/>
+      <rect x="4" y="4" width="16" height="16" rx="1" stroke="currentColor" strokeWidth="2" />
+      <path d="M12 4V20" stroke="currentColor" strokeWidth="2" />
+      <path d="M4 12H20" stroke="currentColor" strokeWidth="2" />
     </svg>
   ),
 };
@@ -260,9 +260,8 @@ const PaintColourPicker: React.FC<PaintColourPickerProps> = ({
   const currentFamily = PAINT_FAMILIES[activeFamily];
 
   return (
-    <div className="space-y-5 min-w-0 max-w-full">
-
-      <div className="min-w-0">
+    <div className="space-y-5 min-w-0 w-full max-w-full overflow-hidden">
+      <div className="min-w-0 w-full max-w-full">
         <div className="mb-3">
           <h4 className="text-sm font-medium tracking-wide text-gold">
             Browse Colours
@@ -272,8 +271,7 @@ const PaintColourPicker: React.FC<PaintColourPickerProps> = ({
           </p>
         </div>
 
-        {/* This scrolls horizontally INSIDE the colour picker only */}
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide max-w-full">
+        <div className="flex gap-2 overflow-x-auto overflow-y-hidden pb-2 scrollbar-hide max-w-full min-w-0">
           {PAINT_FAMILIES.map((family, index) => (
             <button
               key={family.name}
@@ -295,7 +293,7 @@ const PaintColourPicker: React.FC<PaintColourPickerProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 min-w-0">
+      <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 min-w-0 w-full max-w-full">
         {currentFamily.colours.map((colour) => {
           const isSelected =
             selectedHex?.toLowerCase() === colour.hex.toLowerCase();
@@ -307,7 +305,7 @@ const PaintColourPicker: React.FC<PaintColourPickerProps> = ({
               onClick={() => onSelect(colour)}
               aria-label={`Select ${colour.name}`}
               title={`${colour.name} ${colour.hex}`}
-              className="group flex flex-col items-center gap-1.5 min-w-0"
+              className="group flex flex-col items-center gap-1.5 min-w-0 max-w-full"
             >
               <span
                 className={`
@@ -366,28 +364,87 @@ const App: React.FC = () => {
   const [paintSampleHex, setPaintSampleHex] = useState<string | null>(null);
 
   // Panelling state
-  const [panellingStyle, setPanellingStyle] = useState<PanellingStyle>(PanellingStyle.TONGUE_AND_GROOVE);
-  const [panellingHeight, setPanellingHeight] = useState<PanellingHeight>(PanellingHeight.HALF_WALL);
+  const [panellingStyle, setPanellingStyle] = useState<PanellingStyle>(
+    PanellingStyle.TONGUE_AND_GROOVE
+  );
+  const [panellingHeight, setPanellingHeight] = useState<PanellingHeight>(
+    PanellingHeight.HALF_WALL
+  );
   const [panellingColorQuery, setPanellingColorQuery] = useState<string>('Off-white');
 
-  const [result, setResult] = useState<{ type: 'image' | 'text' | 'search'; data: any; sources?: GroundingChunk[] } | null>(null);
-  const [lastUnalteredResult, setLastUnalteredResult] = useState<{ base64: string; mimeType: string } | null>(null);
-  const [history, setHistory] = useState<{ base64: string; mimeType: string }[]>([]);
-  const [future, setFuture] = useState<{ base64: string; mimeType: string }[]>([]);
+  const [result, setResult] = useState<{
+    type: 'image' | 'text' | 'search';
+    data: any;
+    sources?: GroundingChunk[];
+  } | null>(null);
+
+  const [lastUnalteredResult, setLastUnalteredResult] = useState<{
+    base64: string;
+    mimeType: string;
+  } | null>(null);
+
+  const [history, setHistory] = useState<
+    { base64: string; mimeType: string }[]
+  >([]);
+
+  const [future, setFuture] = useState<
+    { base64: string; mimeType: string }[]
+  >([]);
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [loadingMessage, setLoadingMessage] = useState<string>('Preparing your design...');
+  const [loadingMessage, setLoadingMessage] = useState<string>(
+    'Preparing your design...'
+  );
+
   const [error, setError] = useState<string | null>(null);
 
-  const [designIdeas, setDesignIdeas] = useState<{ideas: string[], sources?: GroundingChunk[]} | null>(null);
+  const [designIdeas, setDesignIdeas] = useState<{
+    ideas: string[];
+    sources?: GroundingChunk[];
+  } | null>(null);
+
   const [selectedIdeas, setSelectedIdeas] = useState<string[]>([]);
 
   // Modal State
-  const [activeModal, setActiveModal] = useState<'about' | 'privacy' | 'terms' | 'contact' | null>(null);
+  const [activeModal, setActiveModal] = useState<
+    'about' | 'privacy' | 'terms' | 'contact' | null
+  >(null);
 
   // Usage tracking
   const [usageCount, setUsageCount] = useState(0);
   const [showLimitModal, setShowLimitModal] = useState(false);
+
+  /*
+   * IMPORTANT:
+   * Prevent any child component — especially the landscape camera —
+   * from making the entire document a few pixels wider than the viewport.
+   *
+   * We only lock horizontal overflow. Normal vertical scrolling remains
+   * completely unaffected.
+   */
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+
+    const previousHtmlOverflowX = html.style.overflowX;
+    const previousBodyOverflowX = body.style.overflowX;
+    const previousHtmlOverscrollBehaviorX = html.style.overscrollBehaviorX;
+    const previousBodyOverscrollBehaviorX = body.style.overscrollBehaviorX;
+
+    html.style.overflowX = 'hidden';
+    body.style.overflowX = 'hidden';
+
+    html.style.overscrollBehaviorX = 'none';
+    body.style.overscrollBehaviorX = 'none';
+
+    return () => {
+      html.style.overflowX = previousHtmlOverflowX;
+      body.style.overflowX = previousBodyOverflowX;
+
+      html.style.overscrollBehaviorX = previousHtmlOverscrollBehaviorX;
+      body.style.overscrollBehaviorX = previousBodyOverscrollBehaviorX;
+    };
+  }, []);
 
   useEffect(() => {
     const data = getUsageData();
@@ -410,7 +467,9 @@ const App: React.FC = () => {
         return `${panellingStyle} (${panellingHeight}) in ${panellingColorQuery}`;
 
       case Tab.DESIGN_IDEAS:
-        return selectedIdeas.length > 0 ? selectedIdeas.join(', ') : 'Generated Ideas';
+        return selectedIdeas.length > 0
+          ? selectedIdeas.join(', ')
+          : 'Generated Ideas';
 
       default:
         return null;
@@ -423,7 +482,7 @@ const App: React.FC = () => {
     panellingStyle,
     panellingHeight,
     panellingColorQuery,
-    selectedIdeas
+    selectedIdeas,
   ]);
 
   const handleRoomImageSelect = async (file: File | null) => {
@@ -442,9 +501,14 @@ const App: React.FC = () => {
 
       try {
         const base64 = await fileToBase64(file);
-        setOriginalRoom({ base64, mimeType: file.type });
+        setOriginalRoom({
+          base64,
+          mimeType: file.type,
+        });
       } catch (e) {
-        setError('Could not read the selected image file. Please try another file.');
+        setError(
+          'Could not read the selected image file. Please try another file.'
+        );
         setOriginalRoom(null);
       } finally {
         setIsLoading(false);
@@ -484,8 +548,8 @@ const App: React.FC = () => {
         setPaintSampleHex(hex);
         setPaintNameQuery('');
       } catch (e) {
-        console.error("Failed to extract color from sample", e);
-        setError("Could not extract color from the image sample.");
+        console.error('Failed to extract color from sample', e);
+        setError('Could not extract color from the image sample.');
         setPaintSampleHex(null);
       }
     } else {
@@ -502,7 +566,10 @@ const App: React.FC = () => {
 
   const incrementUsage = () => {
     const data = getUsageData();
-    const newData = { ...data, count: data.count + 1 };
+    const newData = {
+      ...data,
+      count: data.count + 1,
+    };
 
     saveUsageData(newData);
     setUsageCount(newData.count);
@@ -522,7 +589,7 @@ const App: React.FC = () => {
     setTimeout(() => {
       resultRef.current?.scrollIntoView({
         behavior: 'smooth',
-        block: 'start'
+        block: 'start',
       });
     }, 100);
 
@@ -535,7 +602,10 @@ const App: React.FC = () => {
         throw new Error('Please upload a room image.');
       }
 
-      let generatedImage: { base64: string; mimeType: string };
+      let generatedImage: {
+        base64: string;
+        mimeType: string;
+      };
 
       if (activeTab === Tab.WALLPAPER) {
         if (!styleImage) {
@@ -545,9 +615,10 @@ const App: React.FC = () => {
         setLoadingMessage('Preparing wallpaper...');
 
         const styleBase64 = await fileToBase64(styleImage);
+
         const wallpaperSwatch = {
           base64: styleBase64,
-          mimeType: styleImage.type
+          mimeType: styleImage.type,
         };
 
         setLoadingMessage('Analysing wallpaper pattern...');
@@ -565,10 +636,11 @@ const App: React.FC = () => {
           croppedWallpaper.base64,
           croppedWallpaper.mimeType
         );
-
       } else if (activeTab === Tab.PAINT) {
         if (!paintNameQuery && !paintSampleHex) {
-          throw new Error('Please choose a paint colour, enter a colour, or upload a sample.');
+          throw new Error(
+            'Please choose a paint colour, enter a colour, or upload a sample.'
+          );
         }
 
         if (paintNameQuery.trim()) {
@@ -583,10 +655,15 @@ const App: React.FC = () => {
           paintNameQuery,
           paintSampleHex
         );
-
       } else if (activeTab === Tab.PANELLING) {
-        if (!panellingStyle || !panellingHeight || !panellingColorQuery) {
-          throw new Error('Please select panelling style, height, and color.');
+        if (
+          !panellingStyle ||
+          !panellingHeight ||
+          !panellingColorQuery
+        ) {
+          throw new Error(
+            'Please select panelling style, height, and color.'
+          );
         }
 
         setLoadingMessage('Designing panelling...');
@@ -598,9 +675,8 @@ const App: React.FC = () => {
           panellingHeight,
           panellingColorQuery
         );
-
       } else {
-        throw new Error("Invalid tab selection.");
+        throw new Error('Invalid tab selection.');
       }
 
       setLoadingMessage('Adding final touches...');
@@ -618,9 +694,8 @@ const App: React.FC = () => {
 
       setResult({
         type: 'image',
-        data: watermarkedImage
+        data: watermarkedImage,
       });
-
     } catch (err: any) {
       setError(err.message || 'An unexpected error occurred.');
     } finally {
@@ -638,47 +713,51 @@ const App: React.FC = () => {
     panellingColorQuery,
   ]);
 
-  const handleEditSubmit = useCallback(async (prompt: string) => {
-    if (!lastUnalteredResult || !prompt) {
-      setError('An image must be present to edit.');
-      return;
-    }
+  const handleEditSubmit = useCallback(
+    async (prompt: string) => {
+      if (!lastUnalteredResult || !prompt) {
+        setError('An image must be present to edit.');
+        return;
+      }
 
-    setError(null);
-    setIsLoading(true);
+      setError(null);
+      setIsLoading(true);
 
-    try {
-      const currentImage = { ...lastUnalteredResult };
+      try {
+        const currentImage = {
+          ...lastUnalteredResult,
+        };
 
-      const generatedImage = await editText(
-        lastUnalteredResult.base64,
-        lastUnalteredResult.mimeType,
-        prompt
-      );
+        const generatedImage = await editText(
+          lastUnalteredResult.base64,
+          lastUnalteredResult.mimeType,
+          prompt
+        );
 
-      setHistory(prev => [...prev, currentImage]);
-      setFuture([]);
-      setLastUnalteredResult(generatedImage);
+        setHistory((prev) => [...prev, currentImage]);
+        setFuture([]);
+        setLastUnalteredResult(generatedImage);
 
-      const watermarkedImage = await addWatermark(
-        generatedImage.base64,
-        'Blank Canvas AI'
-      );
+        const watermarkedImage = await addWatermark(
+          generatedImage.base64,
+          'Blank Canvas AI'
+        );
 
-      setResult({
-        type: 'image',
-        data: watermarkedImage
-      });
-
-    } catch (err: any) {
-      setError(
-        err.message ||
-        'An unexpected error occurred during edit.'
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  }, [lastUnalteredResult]);
+        setResult({
+          type: 'image',
+          data: watermarkedImage,
+        });
+      } catch (err: any) {
+        setError(
+          err.message ||
+            'An unexpected error occurred during edit.'
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [lastUnalteredResult]
+  );
 
   const handleUndo = useCallback(async () => {
     if (
@@ -695,9 +774,11 @@ const App: React.FC = () => {
     try {
       const newHistory = [...history];
       const previousImage = newHistory.pop()!;
-      const currentImage = { ...lastUnalteredResult };
+      const currentImage = {
+        ...lastUnalteredResult,
+      };
 
-      setFuture(prev => [currentImage, ...prev]);
+      setFuture((prev) => [currentImage, ...prev]);
       setHistory(newHistory);
       setLastUnalteredResult(previousImage);
 
@@ -708,9 +789,8 @@ const App: React.FC = () => {
 
       setResult({
         type: 'image',
-        data: watermarkedImage
+        data: watermarkedImage,
       });
-
     } catch (err: any) {
       setError('Could not undo. Please try again.');
     } finally {
@@ -733,9 +813,11 @@ const App: React.FC = () => {
     try {
       const newFuture = [...future];
       const nextImage = newFuture.shift()!;
-      const currentImage = { ...lastUnalteredResult };
+      const currentImage = {
+        ...lastUnalteredResult,
+      };
 
-      setHistory(prev => [...prev, currentImage]);
+      setHistory((prev) => [...prev, currentImage]);
       setFuture(newFuture);
       setLastUnalteredResult(nextImage);
 
@@ -746,9 +828,8 @@ const App: React.FC = () => {
 
       setResult({
         type: 'image',
-        data: watermarkedImage
+        data: watermarkedImage,
       });
-
     } catch (err: any) {
       setError('Could not redo. Please try again.');
     } finally {
@@ -760,7 +841,7 @@ const App: React.FC = () => {
     const imageSource = lastUnalteredResult || originalRoom;
 
     if (!imageSource) {
-      setError("Please upload a room image first.");
+      setError('Please upload a room image first.');
       return;
     }
 
@@ -778,24 +859,31 @@ const App: React.FC = () => {
 
       const parsedIdeas = response.text
         .split('\n')
-        .map(line => line.trim())
-        .filter(line => line.startsWith('* ') || line.startsWith('- '))
-        .map(line => line.replace(/^[\*\-]\s*/, ''))
+        .map((line) => line.trim())
+        .filter(
+          (line) =>
+            line.startsWith('* ') ||
+            line.startsWith('- ')
+        )
+        .map((line) =>
+          line.replace(/^[\*\-]\s*/, '')
+        )
         .filter(Boolean);
 
       if (parsedIdeas.length === 0) {
-        throw new Error("The AI didn't return any design ideas. Try again.");
+        throw new Error(
+          "The AI didn't return any design ideas. Try again."
+        );
       }
 
       setDesignIdeas({
         ideas: parsedIdeas,
-        sources: response.sources
+        sources: response.sources,
       });
-
     } catch (err: any) {
       setError(
         err.message ||
-        'An unexpected error occurred while getting design ideas.'
+          'An unexpected error occurred while getting design ideas.'
       );
     } finally {
       setIsLoading(false);
@@ -803,9 +891,9 @@ const App: React.FC = () => {
   }, [originalRoom, lastUnalteredResult]);
 
   const handleIdeaSelectionChange = (idea: string) => {
-    setSelectedIdeas(prevSelectedIdeas => {
+    setSelectedIdeas((prevSelectedIdeas) => {
       if (prevSelectedIdeas.includes(idea)) {
-        return prevSelectedIdeas.filter(i => i !== idea);
+        return prevSelectedIdeas.filter((i) => i !== idea);
       }
 
       return [...prevSelectedIdeas, idea];
@@ -830,7 +918,9 @@ const App: React.FC = () => {
 
       const combinedIdeaPrompt =
         `Implement the following design ideas: ${
-          selectedIdeas.map(idea => `\n- ${idea}`).join('')
+          selectedIdeas
+            .map((idea) => `\n- ${idea}`)
+            .join('')
         }`;
 
       const generatedImage = await implementDesignIdeas(
@@ -840,7 +930,7 @@ const App: React.FC = () => {
       );
 
       if (currentImage) {
-        setHistory(prev => [...prev, currentImage]);
+        setHistory((prev) => [...prev, currentImage]);
         setFuture([]);
       }
 
@@ -854,16 +944,15 @@ const App: React.FC = () => {
 
       setResult({
         type: 'image',
-        data: watermarkedImage
+        data: watermarkedImage,
       });
 
       setDesignIdeas(null);
       setSelectedIdeas([]);
-
     } catch (err: any) {
       setError(
         err.message ||
-        'An unexpected error occurred while implementing ideas.'
+          'An unexpected error occurred while implementing ideas.'
       );
     } finally {
       setIsLoading(false);
@@ -901,7 +990,7 @@ const App: React.FC = () => {
     paintSampleHex,
     panellingStyle,
     panellingHeight,
-    panellingColorQuery
+    panellingColorQuery,
   ]);
 
   const FormLabel: React.FC<{
@@ -909,10 +998,12 @@ const App: React.FC = () => {
     className?: string;
   }> = ({
     children,
-    className
+    className,
   }) => (
     <label
-      className={`block text-2xl font-serif text-gold mb-2 ${className || ''}`}
+      className={`block text-2xl font-serif text-gold mb-2 ${
+        className || ''
+      }`}
     >
       {children}
     </label>
@@ -920,7 +1011,7 @@ const App: React.FC = () => {
 
   const renderControls = () => {
     const commonRoomUploader = (
-      <div className="flex flex-col gap-1 min-w-0 max-w-full">
+      <div className="flex flex-col gap-1 min-w-0 w-full max-w-full overflow-hidden">
         <ImageUploader
           id="room-image"
           label={<FormLabel>1. Your Room</FormLabel>}
@@ -972,13 +1063,13 @@ const App: React.FC = () => {
     switch (activeTab) {
       case Tab.WALLPAPER:
         return (
-          <div className="space-y-6 min-w-0 max-w-full">
+          <div className="space-y-6 min-w-0 w-full max-w-full overflow-hidden">
             {commonRoomUploader}
 
-            <div className="min-w-0 max-w-full">
+            <div className="min-w-0 w-full max-w-full overflow-hidden">
               <FormLabel>2. Choose Wallpaper Style</FormLabel>
 
-              <div className="flex flex-col gap-1 min-w-0">
+              <div className="flex flex-col gap-1 min-w-0 w-full max-w-full overflow-hidden">
                 <ImageUploader
                   id="style-image"
                   label=""
@@ -1027,7 +1118,7 @@ const App: React.FC = () => {
                 )}
               </div>
 
-              <p className="text-xs text-center text-text-secondary font-medium mt-2 px-2">
+              <p className="text-xs text-center text-text-secondary font-medium mt-2 px-2 break-words">
                 Find wallpaper online, screenshot or{' '}
                 <span className="font-bold text-gold/80">
                   Copy Image
@@ -1040,12 +1131,11 @@ const App: React.FC = () => {
 
       case Tab.PAINT:
         return (
-          <div className="space-y-6 min-w-0 max-w-full">
+          <div className="space-y-6 min-w-0 w-full max-w-full overflow-hidden">
             {commonRoomUploader}
 
-            <div className="space-y-7 min-w-0 max-w-full">
-
-              <div>
+            <div className="space-y-7 min-w-0 w-full max-w-full overflow-hidden">
+              <div className="min-w-0 w-full max-w-full">
                 <FormLabel>2. Upload Paint Colour Sample</FormLabel>
 
                 <ImageUploader
@@ -1072,17 +1162,17 @@ const App: React.FC = () => {
                 />
 
                 {paintSampleHex && (
-                  <div className="mt-3 flex items-center justify-center gap-3">
+                  <div className="mt-3 flex items-center justify-center gap-3 min-w-0 max-w-full">
                     <div
-                      className="w-8 h-8 rounded-lg border border-border shadow-sm"
+                      className="w-8 h-8 rounded-lg border border-border shadow-sm flex-shrink-0"
                       style={{ backgroundColor: paintSampleHex }}
                     />
 
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs text-text-secondary">
                         Colour detected
                       </p>
-                      <p className="text-xs font-mono text-gold">
+                      <p className="text-xs font-mono text-gold break-all">
                         {paintSampleHex}
                       </p>
                     </div>
@@ -1090,7 +1180,7 @@ const App: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex items-center min-w-0">
+              <div className="flex items-center min-w-0 max-w-full overflow-hidden">
                 <div className="flex-grow border-t border-border min-w-0" />
                 <span className="flex-shrink-0 mx-4 text-xs text-text-secondary">
                   OR
@@ -1098,7 +1188,7 @@ const App: React.FC = () => {
                 <div className="flex-grow border-t border-border min-w-0" />
               </div>
 
-              <div className="min-w-0 max-w-full">
+              <div className="min-w-0 w-full max-w-full overflow-hidden">
                 <FormLabel>3. Browse Colours</FormLabel>
 
                 <PaintColourPicker
@@ -1107,21 +1197,21 @@ const App: React.FC = () => {
                 />
 
                 {paintSampleHex && paintNameQuery && (
-                  <div className="mt-5 p-4 rounded-xl border border-gold/40 bg-background/50 min-w-0 max-w-full">
-                    <div className="flex items-center gap-4 min-w-0">
+                  <div className="mt-5 p-4 rounded-xl border border-gold/40 bg-background/50 min-w-0 max-w-full overflow-hidden">
+                    <div className="flex items-center gap-4 min-w-0 max-w-full">
                       <div
                         className="w-14 h-14 rounded-lg border border-gold/60 shadow-lg flex-shrink-0"
                         style={{ backgroundColor: paintSampleHex }}
                       />
 
-                      <div className="min-w-0">
+                      <div className="min-w-0 max-w-full">
                         <p className="text-xs uppercase tracking-widest text-text-secondary">
                           Selected Colour
                         </p>
                         <p className="font-serif text-lg text-gold truncate">
                           {paintNameQuery}
                         </p>
-                        <p className="text-xs font-mono text-text-secondary">
+                        <p className="text-xs font-mono text-text-secondary break-all">
                           {paintSampleHex}
                         </p>
                       </div>
@@ -1130,7 +1220,7 @@ const App: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex items-center min-w-0">
+              <div className="flex items-center min-w-0 max-w-full overflow-hidden">
                 <div className="flex-grow border-t border-border min-w-0" />
                 <span className="flex-shrink-0 mx-4 text-xs text-text-secondary">
                   OR
@@ -1138,7 +1228,7 @@ const App: React.FC = () => {
                 <div className="flex-grow border-t border-border min-w-0" />
               </div>
 
-              <div className="min-w-0 max-w-full">
+              <div className="min-w-0 w-full max-w-full overflow-hidden">
                 <FormLabel>4. Enter Paint Colour</FormLabel>
 
                 <input
@@ -1155,46 +1245,45 @@ const App: React.FC = () => {
                     }
                   }}
                   placeholder="e.g. Hague Blue or dark green"
-                  className="w-full max-w-full min-w-0 p-3 bg-background border border-border rounded-lg focus:ring-gold focus:border-gold transition text-text-primary placeholder:text-text-secondary/60"
+                  className="w-full max-w-full min-w-0 box-border p-3 bg-background border border-border rounded-lg focus:ring-gold focus:border-gold transition text-text-primary placeholder:text-text-secondary/60"
                 />
 
-                <p className="text-xs text-text-secondary mt-2">
+                <p className="text-xs text-text-secondary mt-2 break-words">
                   Enter a specific paint name for an exact match, or simply describe the colour you want.
                 </p>
               </div>
-
             </div>
           </div>
         );
 
       case Tab.PANELLING:
         return (
-          <div className="space-y-6 min-w-0 max-w-full">
+          <div className="space-y-6 min-w-0 w-full max-w-full overflow-hidden">
             {commonRoomUploader}
 
-            <div className="min-w-0 max-w-full">
+            <div className="min-w-0 w-full max-w-full overflow-hidden">
               <FormLabel>2. Design Your Panelling</FormLabel>
 
-              <div className="space-y-4 min-w-0">
-                <div>
+              <div className="space-y-4 min-w-0 max-w-full">
+                <div className="min-w-0">
                   <h4 className="block text-sm font-medium text-gold mb-2">
                     Style
                   </h4>
 
-                  <div className="grid grid-cols-3 gap-2 min-w-0">
+                  <div className="grid grid-cols-3 gap-2 min-w-0 w-full max-w-full">
                     {Object.values(PanellingStyle).map((style) => (
                       <button
                         key={style}
                         type="button"
                         onClick={() => setPanellingStyle(style)}
-                        className={`min-w-0 px-3 py-3 h-28 flex flex-col items-center justify-center gap-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        className={`min-w-0 max-w-full px-3 py-3 h-28 flex flex-col items-center justify-center gap-2 text-sm font-medium rounded-lg transition-all duration-200 ${
                           panellingStyle === style
                             ? 'bg-gold text-background'
                             : 'bg-surface text-text-primary hover:bg-border'
                         }`}
                       >
                         {panellingIcons[style]}
-                        <span className="leading-tight text-center">
+                        <span className="leading-tight text-center break-words">
                           {style}
                         </span>
                       </button>
@@ -1202,18 +1291,18 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <h4 className="block text-sm font-medium text-gold mb-2">
                     Height
                   </h4>
 
-                  <div className="grid grid-cols-3 gap-2 min-w-0">
+                  <div className="grid grid-cols-3 gap-2 min-w-0 w-full max-w-full">
                     {Object.values(PanellingHeight).map((height) => (
                       <button
                         key={height}
                         type="button"
                         onClick={() => setPanellingHeight(height)}
-                        className={`min-w-0 px-3 py-2 text-sm font-medium rounded-full transition-all duration-200 ${
+                        className={`min-w-0 max-w-full px-3 py-2 text-sm font-medium rounded-full transition-all duration-200 ${
                           panellingHeight === height
                             ? 'bg-gold text-background'
                             : 'bg-surface text-text-primary hover:bg-border'
@@ -1225,7 +1314,7 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="min-w-0">
+                <div className="min-w-0 w-full max-w-full">
                   <h4 className="block text-sm font-medium text-gold mb-2">
                     Colour
                   </h4>
@@ -1237,7 +1326,7 @@ const App: React.FC = () => {
                       setPanellingColorQuery(e.target.value)
                     }
                     placeholder="e.g. Off-white, dark charcoal grey"
-                    className="w-full max-w-full min-w-0 p-2 bg-background border border-border rounded-lg focus:ring-gold focus:border-gold transition"
+                    className="w-full max-w-full min-w-0 box-border p-2 bg-background border border-border rounded-lg focus:ring-gold focus:border-gold transition"
                   />
                 </div>
               </div>
@@ -1247,16 +1336,16 @@ const App: React.FC = () => {
 
       case Tab.DESIGN_IDEAS:
         return (
-          <div className="space-y-6 min-w-0 max-w-full">
+          <div className="space-y-6 min-w-0 w-full max-w-full overflow-hidden">
             {commonRoomUploader}
 
             {originalRoom ? (
-              <div className="space-y-4 min-w-0 max-w-full">
+              <div className="space-y-4 min-w-0 max-w-full overflow-hidden">
                 <h3 className="text-2xl font-bold font-serif text-gold">
                   Design Enhancement
                 </h3>
 
-                <p className="text-sm text-text-secondary">
+                <p className="text-sm text-text-secondary break-words">
                   AI will scan your room and suggest some interior design ideas.
                 </p>
 
@@ -1270,12 +1359,12 @@ const App: React.FC = () => {
                     Get Design Ideas
                   </button>
                 ) : (
-                  <div className="space-y-4 min-w-0">
-                    <div className="space-y-2 mt-2 min-w-0">
+                  <div className="space-y-4 min-w-0 max-w-full">
+                    <div className="space-y-2 mt-2 min-w-0 max-w-full">
                       {designIdeas.ideas.map((idea, index) => (
                         <label
                           key={index}
-                          className="flex items-start min-w-0 p-3 bg-surface/50 rounded-lg cursor-pointer hover:bg-border/50 transition-colors"
+                          className="flex items-start min-w-0 max-w-full p-3 bg-surface/50 rounded-lg cursor-pointer hover:bg-border/50 transition-colors"
                         >
                           <input
                             type="checkbox"
@@ -1286,7 +1375,7 @@ const App: React.FC = () => {
                             className="mt-1 h-4 w-4 rounded border-gray-300 text-gold focus:ring-gold flex-shrink-0"
                           />
 
-                          <span className="ml-3 min-w-0 text-sm text-text-primary">
+                          <span className="ml-3 min-w-0 max-w-full text-sm text-text-primary break-words">
                             {idea}
                           </span>
                         </label>
@@ -1308,7 +1397,7 @@ const App: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div className="text-center p-4 bg-surface rounded-lg min-w-0">
+              <div className="text-center p-4 bg-surface rounded-lg min-w-0 max-w-full overflow-hidden">
                 <p className="font-semibold font-serif text-gold text-lg">
                   Upload a Room Image
                 </p>
@@ -1323,17 +1412,21 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-full min-w-0 overflow-x-hidden bg-background text-text-primary font-sans flex flex-col relative">
-
+    <div
+      className="min-h-screen w-full max-w-full min-w-0 overflow-x-hidden bg-background text-text-primary font-sans flex flex-col relative"
+      style={{ overflowX: 'clip' }}
+    >
       {showSplash ? (
         <SplashScreen onFinish={() => setShowSplash(false)} />
       ) : (
         <>
-          <Header />
+          <div className="w-full max-w-full min-w-0 overflow-x-hidden">
+            <Header />
+          </div>
 
           {/* Usage Notice Banner */}
           <div className="w-full max-w-full min-w-0 bg-surface border-b border-border/50 px-4 py-3 overflow-x-hidden">
-            <p className="text-center text-sm text-text-secondary">
+            <p className="text-center text-sm text-text-secondary break-words">
               Free plan:{' '}
               <span className="text-gold font-semibold">
                 {Math.max(0, remainingGenerations)} of {WEEKLY_LIMIT} designs remaining
@@ -1342,71 +1435,116 @@ const App: React.FC = () => {
             </p>
           </div>
 
-          <main className="flex-grow w-full max-w-full min-w-0 overflow-x-hidden container mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-12">
-
-            <div className="mb-8 min-w-0 max-w-full">
+          <main
+            className="flex-grow w-full max-w-full min-w-0 overflow-x-hidden container mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-12"
+            style={{ overflowX: 'clip' }}
+          >
+            <div className="mb-8 min-w-0 w-full max-w-full overflow-hidden">
               <TabSelector
                 activeTab={activeTab}
                 onTabChange={handleTabChange}
               />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full w-full max-w-full min-w-0">
-
-              <div className="lg:col-span-1 min-w-0 w-full max-w-full bg-surface p-6 rounded-xl border border-border/50">
-
+            <div
+              className="
+                grid
+                grid-cols-1
+                lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]
+                gap-8
+                h-full
+                w-full
+                max-w-full
+                min-w-0
+                overflow-hidden
+              "
+            >
+              {/* CONTROL PANEL */}
+              <div
+                className="
+                  lg:col-span-1
+                  min-w-0
+                  w-full
+                  max-w-full
+                  overflow-hidden
+                  bg-surface
+                  p-6
+                  rounded-xl
+                  border
+                  border-border/50
+                  box-border
+                "
+              >
                 {renderControls()}
 
-                <div className="mt-8 min-w-0 max-w-full">
+                <div className="mt-8 min-w-0 w-full max-w-full overflow-hidden">
                   {activeTab !== Tab.DESIGN_IDEAS && (
                     <button
                       type="button"
                       onClick={handleSubmit}
                       disabled={isSubmitDisabled}
-                      className="w-full max-w-full px-4 py-3 font-bold rounded-full text-lg bg-gradient-to-br from-gold-dark to-gold text-background shadow-lg hover:brightness-110 disabled:bg-gold/40"
+                      className="w-full max-w-full min-w-0 box-border px-4 py-3 font-bold rounded-full text-lg bg-gradient-to-br from-gold-dark to-gold text-background shadow-lg hover:brightness-110 disabled:bg-gold/40"
                     >
                       Generate Image
                     </button>
                   )}
 
                   {error && (
-                    <p className="mt-4 text-sm text-red-400 bg-red-900/50 p-3 rounded-md text-center break-words">
+                    <p className="mt-4 text-sm text-red-400 bg-red-900/50 p-3 rounded-md text-center break-words max-w-full overflow-hidden">
                       {error}
                     </p>
                   )}
                 </div>
-
               </div>
 
+              {/* RESULT PANEL */}
               <div
                 ref={resultRef}
-                className="lg:col-span-2 min-w-0 w-full max-w-full min-h-[60vh] relative bg-surface border border-border/50 rounded-xl overflow-hidden"
+                className="
+                  lg:col-span-2
+                  min-w-0
+                  w-full
+                  max-w-full
+                  min-h-[60vh]
+                  relative
+                  bg-surface
+                  border
+                  border-border/50
+                  rounded-xl
+                  overflow-hidden
+                  box-border
+                "
               >
                 {isLoading && (
                   <Loader message={loadingMessage} />
                 )}
 
-                <ResultDisplay
-                  result={result}
-                  onEditSubmit={handleEditSubmit}
-                  onUndo={handleUndo}
-                  onRedo={handleRedo}
-                  canUndo={history.length > 0}
-                  canRedo={future.length > 0}
-                  isLoading={isLoading}
-                  activeTab={activeTab}
-                  contextSummary={contextSummary}
-                />
+                <div className="min-w-0 w-full max-w-full overflow-hidden">
+                  <ResultDisplay
+                    result={result}
+                    onEditSubmit={handleEditSubmit}
+                    onUndo={handleUndo}
+                    onRedo={handleRedo}
+                    canUndo={history.length > 0}
+                    canRedo={future.length > 0}
+                    isLoading={isLoading}
+                    activeTab={activeTab}
+                    contextSummary={contextSummary}
+                  />
+                </div>
               </div>
-
             </div>
           </main>
 
-          <BottomBanner isVisible={SHOW_ADS} />
+          <div className="w-full max-w-full min-w-0 overflow-hidden">
+            <BottomBanner isVisible={SHOW_ADS} />
+          </div>
 
-          <Footer
-            onOpenModal={(type) => setActiveModal(type)}
-          />
+          <div className="w-full max-w-full min-w-0 overflow-hidden">
+            <Footer
+              onOpenModal={(type) => setActiveModal(type)}
+            />
+          </div>
 
           {/* Limit Reached Modal */}
           <Modal

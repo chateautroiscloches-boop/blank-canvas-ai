@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Tab } from '../types';
 import { logConversionEvent } from '../services/analyticsService';
@@ -10,19 +9,28 @@ interface SaveButtonProps {
 }
 
 const SaveButton: React.FC<SaveButtonProps> = ({ imageUrl, activeTab, contextSummary }) => {
-  const handleDownload = () => {
+  const handleDownload = async () => {
     try {
-      // Log conversion event asynchronously
       logConversionEvent('output_download_click', activeTab, contextSummary);
 
+      // Convert data URL to blob for better mobile support
+      const response = await fetch(imageUrl);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+
       const link = document.createElement('a');
-      link.href = imageUrl;
-      link.download = `ai-design-${Date.now()}.png`;
+      link.href = blobUrl;
+      link.download = `blank-canvas-ai-${Date.now()}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+
+      // Clean up blob URL
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     } catch (error) {
       console.error("Failed to download image:", error);
+      // Fallback — open image in new tab so user can save manually
+      window.open(imageUrl, '_blank');
     }
   };
 

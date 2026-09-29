@@ -47,14 +47,14 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({
     <div className="h-full w-full flex flex-col overflow-hidden p-4 rounded-md bg-surface/30 relative">
       {result.type === 'image' && (
         <>
-          <div className="flex-grow relative overflow-hidden rounded-md group flex items-center justify-center bg-black/20">
+          <div className="flex-grow relative rounded-md flex items-center justify-center bg-black/20 overflow-hidden">
             <img src={result.data} alt="Generated result" className="max-w-full max-h-full object-contain shadow-2xl" />
-            
-            {/* Buttons overlaying the image */}
-            <div className="absolute bottom-4 right-4 flex items-center gap-3">
-              <SaveButton imageUrl={result.data} activeTab={activeTab} contextSummary={contextSummary} />
-              <ShareButton imageUrl={result.data} activeTab={activeTab} contextSummary={contextSummary} />
-            </div>
+          </div>
+
+          {/* Buttons outside the overflow-hidden container */}
+          <div className="flex items-center justify-end gap-3 mt-2 px-1">
+            <SaveButton imageUrl={result.data} activeTab={activeTab} contextSummary={contextSummary} />
+            <ShareButton imageUrl={result.data} activeTab={activeTab} contextSummary={contextSummary} />
           </div>
           
           <div className="flex flex-col gap-1">

@@ -8,7 +8,7 @@ import {
   implementDesignIdeas,
   extractPatternFromImage,
   applyPanelling,
-  applyPaintColor
+  applyPaintcolour
 } from './services/geminiService';
 import Header from './components/Header';
 import ImageUploader from './components/ImageUploader';
@@ -222,22 +222,22 @@ const PAINT_FAMILIES: PaintFamily[] = [
 const panellingIcons: Record<PanellingStyle, React.ReactNode> = {
   [PanellingStyle.TONGUE_AND_GROOVE]: (
     <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M7 4V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M12 4V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M17 4V20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M7 4V20" stroke="currentcolour" strokeWidth="2" strokeLinecap="round" />
+      <path d="M12 4V20" stroke="currentcolour" strokeWidth="2" strokeLinecap="round" />
+      <path d="M17 4V20" stroke="currentcolour" strokeWidth="2" strokeLinecap="round" />
     </svg>
   ),
   [PanellingStyle.VICTORIAN]: (
     <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="5" width="16" height="14" rx="1" stroke="currentColor" strokeWidth="2" />
-      <rect x="7" y="8" width="10" height="8" rx="0.5" stroke="currentColor" strokeWidth="2" />
+      <rect x="4" y="5" width="16" height="14" rx="1" stroke="currentcolour" strokeWidth="2" />
+      <rect x="7" y="8" width="10" height="8" rx="0.5" stroke="currentcolour" strokeWidth="2" />
     </svg>
   ),
   [PanellingStyle.SHAKER]: (
     <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect x="4" y="4" width="16" height="16" rx="1" stroke="currentColor" strokeWidth="2" />
-      <path d="M12 4V20" stroke="currentColor" strokeWidth="2" />
-      <path d="M4 12H20" stroke="currentColor" strokeWidth="2" />
+      <rect x="4" y="4" width="16" height="16" rx="1" stroke="currentcolour" strokeWidth="2" />
+      <path d="M12 4V20" stroke="currentcolour" strokeWidth="2" />
+      <path d="M4 12H20" stroke="currentcolour" strokeWidth="2" />
     </svg>
   ),
 };
@@ -317,13 +317,13 @@ const PaintColourPicker: React.FC<PaintColourPickerProps> = ({
                       : 'border-border/70 group-hover:border-gold/60 group-hover:scale-[1.02]'
                   }
                 `}
-                style={{ backgroundColor: colour.hex }}
+                style={{ backgroundcolour: colour.hex }}
               >
                 {isSelected && (
                   <span className="absolute inset-0 flex items-center justify-center">
                     <span
                       className="w-5 h-5 rounded-full border-2 border-white/90 shadow-lg"
-                      style={{ backgroundColor: colour.hex }}
+                      style={{ backgroundcolour: colour.hex }}
                     />
                   </span>
                 )}
@@ -370,7 +370,7 @@ const App: React.FC = () => {
   const [panellingHeight, setPanellingHeight] = useState<PanellingHeight>(
     PanellingHeight.HALF_WALL
   );
-  const [panellingColorQuery, setPanellingColorQuery] = useState<string>('Off-white');
+  const [panellingcolourQuery, setPanellingcolourQuery] = useState<string>('Off-white');
 
   const [result, setResult] = useState<{
     type: 'image' | 'text' | 'search';
@@ -464,7 +464,7 @@ const App: React.FC = () => {
         return styleImage ? 'Custom Upload' : null;
 
       case Tab.PANELLING:
-        return `${panellingStyle} (${panellingHeight}) in ${panellingColorQuery}`;
+        return `${panellingStyle} (${panellingHeight}) in ${panellingcolourQuery}`;
 
       case Tab.DESIGN_IDEAS:
         return selectedIdeas.length > 0
@@ -481,7 +481,7 @@ const App: React.FC = () => {
     styleImage,
     panellingStyle,
     panellingHeight,
-    panellingColorQuery,
+    panellingcolourQuery,
     selectedIdeas,
   ]);
 
@@ -535,7 +535,7 @@ const App: React.FC = () => {
     setPaintSampleHex(null);
     setPanellingStyle(PanellingStyle.TONGUE_AND_GROOVE);
     setPanellingHeight(PanellingHeight.HALF_WALL);
-    setPanellingColorQuery('Off-white');
+    setPanellingcolourQuery('Off-white');
   };
 
   const handlePaintSampleSelect = async (file: File | null) => {
@@ -548,8 +548,8 @@ const App: React.FC = () => {
         setPaintSampleHex(hex);
         setPaintNameQuery('');
       } catch (e) {
-        console.error('Failed to extract color from sample', e);
-        setError('Could not extract color from the image sample.');
+        console.error('Failed to extract colour from sample', e);
+        setError('Could not extract colour from the image sample.');
         setPaintSampleHex(null);
       }
     } else {
@@ -647,9 +647,9 @@ const App: React.FC = () => {
           logPaintSearch(paintNameQuery);
         }
 
-        setLoadingMessage('Analysing paint color...');
+        setLoadingMessage('Analysing paint colour...');
 
-        generatedImage = await applyPaintColor(
+        generatedImage = await applyPaintcolour(
           imageSource.base64,
           imageSource.mimeType,
           paintNameQuery,
@@ -659,10 +659,10 @@ const App: React.FC = () => {
         if (
           !panellingStyle ||
           !panellingHeight ||
-          !panellingColorQuery
+          !panellingcolourQuery
         ) {
           throw new Error(
-            'Please select panelling style, height, and color.'
+            'Please select panelling style, height, and colour.'
           );
         }
 
@@ -673,7 +673,7 @@ const App: React.FC = () => {
           imageSource.mimeType,
           panellingStyle,
           panellingHeight,
-          panellingColorQuery
+          panellingcolourQuery
         );
       } else {
         throw new Error('Invalid tab selection.');
@@ -710,7 +710,7 @@ const App: React.FC = () => {
     paintSampleHex,
     panellingStyle,
     panellingHeight,
-    panellingColorQuery,
+    panellingcolourQuery,
   ]);
 
   const handleEditSubmit = useCallback(
@@ -976,7 +976,7 @@ const App: React.FC = () => {
       return (
         !panellingStyle ||
         !panellingHeight ||
-        !panellingColorQuery.trim()
+        !panellingcolourQuery.trim()
       );
     }
 
@@ -990,7 +990,7 @@ const App: React.FC = () => {
     paintSampleHex,
     panellingStyle,
     panellingHeight,
-    panellingColorQuery,
+    panellingcolourQuery,
   ]);
 
   const FormLabel: React.FC<{
@@ -1022,7 +1022,7 @@ const App: React.FC = () => {
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth={1.5}
-              stroke="currentColor"
+              stroke="currentcolour"
             >
               <path
                 strokeLinecap="round"
@@ -1045,7 +1045,7 @@ const App: React.FC = () => {
               className="h-3 w-3"
               fill="none"
               viewBox="0 0 24 24"
-              stroke="currentColor"
+              stroke="currentcolour"
             >
               <path
                 strokeLinecap="round"
@@ -1081,7 +1081,7 @@ const App: React.FC = () => {
                       fill="none"
                       viewBox="0 0 24 24"
                       strokeWidth={1.5}
-                      stroke="currentColor"
+                      stroke="currentcolour"
                     >
                       <path
                         strokeLinecap="round"
@@ -1106,7 +1106,7 @@ const App: React.FC = () => {
                       viewBox="0 0 24 24"
                     >
                       <path
-                        stroke="currentColor"
+                        stroke="currentcolour"
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
@@ -1148,7 +1148,7 @@ const App: React.FC = () => {
                       fill="none"
                       viewBox="0 0 24 24"
                       strokeWidth={1.5}
-                      stroke="currentColor"
+                      stroke="currentcolour"
                     >
                       <path
                         strokeLinecap="round"
@@ -1165,7 +1165,7 @@ const App: React.FC = () => {
                   <div className="mt-3 flex items-center justify-center gap-3 min-w-0 max-w-full">
                     <div
                       className="w-8 h-8 rounded-lg border border-border shadow-sm flex-shrink-0"
-                      style={{ backgroundColor: paintSampleHex }}
+                      style={{ backgroundcolour: paintSampleHex }}
                     />
 
                     <div className="min-w-0">
@@ -1201,7 +1201,7 @@ const App: React.FC = () => {
                     <div className="flex items-center gap-4 min-w-0 max-w-full">
                       <div
                         className="w-14 h-14 rounded-lg border border-gold/60 shadow-lg flex-shrink-0"
-                        style={{ backgroundColor: paintSampleHex }}
+                        style={{ backgroundcolour: paintSampleHex }}
                       />
 
                       <div className="min-w-0 max-w-full">
@@ -1321,9 +1321,9 @@ const App: React.FC = () => {
 
                   <input
                     type="text"
-                    value={panellingColorQuery}
+                    value={panellingcolourQuery}
                     onChange={(e) =>
-                      setPanellingColorQuery(e.target.value)
+                      setPanellingcolourQuery(e.target.value)
                     }
                     placeholder="e.g. Off-white, dark charcoal grey"
                     className="w-full max-w-full min-w-0 box-border p-2 bg-background border border-border rounded-lg focus:ring-gold focus:border-gold transition"
@@ -1364,7 +1364,7 @@ const App: React.FC = () => {
                       {designIdeas.ideas.map((idea, index) => (
                         <label
                           key={index}
-                          className="flex items-start min-w-0 max-w-full p-3 bg-surface/50 rounded-lg cursor-pointer hover:bg-border/50 transition-colors"
+                          className="flex items-start min-w-0 max-w-full p-3 bg-surface/50 rounded-lg cursor-pointer hover:bg-border/50 transition-colours"
                         >
                           <input
                             type="checkbox"

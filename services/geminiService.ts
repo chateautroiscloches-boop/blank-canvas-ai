@@ -1,5 +1,9 @@
 import { GroundingChunk } from '../types';
-import { findPaintByBrandAndName } from '../functions/authoritativePaintService';
+import {
+  findPaintByBrandAndName,
+  findPaintFromQuery,
+  isKnownPaintBrand,
+} from '../functions/authoritativePaintService';
 
 const WORKER_URL =
   'https://blank-canvas-proxy.chateautroiscloches.workers.dev';
@@ -136,6 +140,310 @@ const getImageFromResponse = (
   throw new Error('No image data found in AI response.');
 };
 
+/**
+ * Official manufacturer domains used when verifying manufacturer-specific
+ * colours through Google Search.
+ *
+ * We deliberately do NOT accept random colour websites when the user has
+ * explicitly named a manufacturer.
+ */
+const OFFICIAL_MANUFACTURER_DOMAINS: Record<string, string[]> = {
+  'mylands': ['mylands.com'],
+  'farrowandball': ['farrow-ball.com', 'farrowandball.com'],
+  'benjaminmoore': ['benjaminmoore.com'],
+  'littlegreene': ['littlegreene.com'],
+  'rustoleum': ['rustoleum.com'],
+};
+
+/**
+ * Normalises a manufacturer name for matching against our official-domain map.
+ */
+const normaliseManufacturerName = (value: string): string => {
+  return value
+    .toLowerCase()
+    .replace(/[™®©]/g, '')
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]/g, '');
+};
+
+/**
+ * Checks whether the source returned by the manufacturer search belongs
+ * to an official manufacturer domain.
+ */
+const isOfficialManufacturerSource = (
+  manufacturer: string,
+  source: string
+): boolean => {
+  if (!source) {
+    return false;
+  }
+
+  const domains =
+    OFFICIAL_MANUFACTURER_DOMAINS[
+      normaliseManufacturerName(manufacturer)
+    ];
+
+  if (!domains) {
+    return false;
+  }
+
+  try {
+    const url = new URL(source);
+
+    const hostname = url.hostname
+      .toLowerCase()
+      .replace(/^www\./, '');
+
+    return domains.some(
+      (domain) =>
+        hostname === domain ||
+        hostname.endsWith(`.${domain}`)
+    );
+  } catch {
+    return false;
+  }
+};
+
+/**
+ * Extracts the manufacturer name and colour name from common user input
+ * formats.
+ *
+ * Supported examples:
+ *
+ * "Mylands, Market Green No.38"
+ * "Market Green No.38, Mylands"
+ * "Mylands Market Green No.38"
+ */
+const extractManufacturerAndColour = (
+  colorQuery: string
+): { brand: string; name: string } => {
+  const knownBrands = [
+    'Mylands',
+    'Farrow & Ball',
+    'Benjamin Moore',
+    'Little Greene',
+    'Rust-Oleum',
+  ];
+
+  const trimmedQuery = colorQuery.trim();
+
+  const commaParts = trimmedQuery
+    .split(',')
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  // First try the cleanest format:
+  // "Brand, Colour"
+  if (commaParts.length >= 2) {
+    const brandPart = commaParts.find((part) =>
+      knownBrands.some(
+        (knownBrand) =>
+          part.toLowerCase() === knownBrand.toLowerCase()
+      )
+    );
+
+    if (brandPart) {
+      const name = commaParts
+        .filter((part) => part !== brandPart)
+        .join(', ')
+        .trim();
+
+      return {
+        brand: brandPart,
+        name,
+      };
+    }
+  }
+
+  // Then handle:
+  // "Colour, Brand"
+  if (commaParts.length >= 2) {
+    const reversedBrandPart = commaParts.find((part) =>
+      knownBrands.some(
+        (knownBrand) =>
+          part.toLowerCase() === knownBrand.toLowerCase()
+      )
+    );
+
+    if (reversedBrandPart) {
+      const name = commaParts
+        .filter((part) => part !== reversedBrandPart)
+        .join(', ')
+        .trim();
+
+      return {
+        brand: reversedBrandPart,
+        name,
+      };
+    }
+  }
+
+  // Finally handle:
+  // "Brand Colour"
+  const matchedBrand = knownBrands.find((brand) =>
+    trimmedQuery
+      .toLowerCase()
+      .includes(brand.toLowerCase())
+  );
+
+  if (matchedBrand) {
+    const name = trimmedQuery
+      .replace(
+        new RegExp(
+          matchedBrand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+          'i'
+        ),
+        ''
+      )
+      .replace(/^[,\s]+|[,\s]+$/g, '')
+      .trim();
+
+    return {
+      brand: matchedBrand,
+      name,
+    };
+  }
+
+  return {
+    brand: '',
+    name: trimmedQuery,
+  };
+};
+
+/**
+ * Looks up a manufacturer-specific colour using Google Search.
+ *
+ * This is deliberately a TEXT/SEARCH lookup at this stage.
+ *
+ * The important distinction is that the search is instructed to use the
+ * manufacturer's official website rather than asking Gemini to remember
+ * or invent a HEX value.
+ *
+ * The returned HEX is a DIGITAL VISUALISATION REFERENCE. It is not claimed
+ * to be an official manufacturer HEX specification.
+ */
+const findManufacturerColourOnline = async (
+  brand: string,
+  colourName: string
+): Promise<string | null> => {
+  const officialDomains =
+    OFFICIAL_MANUFACTURER_DOMAINS[
+      normaliseManufacturerName(brand)
+    ];
+
+  if (!officialDomains?.length) {
+    return null;
+  }
+
+  const manufacturerPrompt = `
+You are verifying a real manufacturer's paint colour for a room visualisation
+application.
+
+USER'S REQUEST:
+Manufacturer: ${brand}
+Colour: ${colourName}
+
+IMPORTANT:
+Do NOT guess this colour from memory.
+
+Use Google Search to find the EXACT colour on the manufacturer's OFFICIAL
+website.
+
+The official manufacturer's domain is one of:
+
+${officialDomains.map((domain) => `- ${domain}`).join('\n')}
+
+SEARCH REQUIREMENTS:
+- Find the exact named colour.
+- Prefer the exact product/colour page.
+- If an exact product page is unavailable, use the manufacturer's official
+  colour card/catalogue.
+- Do NOT use Pinterest.
+- Do NOT use random colour websites.
+- Do NOT use third-party paint databases if an official manufacturer source
+  exists.
+- Do NOT substitute a similar colour.
+- Do NOT silently correct the user's colour name to a different colour.
+
+Once you have found the official manufacturer source, determine the closest
+useful DIGITAL HEX REPRESENTATION of the colour shown by that official
+manufacturer swatch/product.
+
+IMPORTANT:
+The HEX is being used only as a digital visualisation reference.
+It is NOT necessary to claim that the manufacturer officially publishes
+that HEX value.
+
+Return EXACTLY this format:
+
+HEX: #XXXXXX
+NAME: Exact Colour Name
+SOURCE: https://official-manufacturer-url
+
+If you cannot find the exact named colour on the official manufacturer's
+website, return exactly:
+
+NO_VERIFIED_MANUFACTURER_COLOUR
+`;
+
+  const manufacturerData = await callGemini(
+    'gemini-2.5-flash',
+    {
+      contents: [
+        {
+          parts: [
+            {
+              text: manufacturerPrompt,
+            },
+          ],
+        },
+      ],
+      tools: [{ googleSearch: {} }],
+    },
+    {
+      // Searching for a colour does NOT consume a design allowance.
+      countUsage: false,
+    }
+  );
+
+  const manufacturerText =
+    manufacturerData.candidates?.[0]?.content?.parts
+      ?.map((part: any) => part.text || '')
+      .join('\n')
+      .trim() || '';
+
+  if (
+    manufacturerText.includes(
+      'NO_VERIFIED_MANUFACTURER_COLOUR'
+    )
+  ) {
+    return null;
+  }
+
+  const hexMatch = manufacturerText.match(
+    /HEX:\s*(#[0-9A-Fa-f]{6})/i
+  );
+
+  const sourceMatch = manufacturerText.match(
+    /SOURCE:\s*(https?:\/\/\S+)/i
+  );
+
+  if (!hexMatch || !sourceMatch) {
+    return null;
+  }
+
+  const hex = hexMatch[1].toUpperCase();
+  const source = sourceMatch[1].replace(/[),.;]+$/, '');
+
+  // Do not accept a HEX result unless Gemini also supplied an official
+  // manufacturer source matching the manufacturer we asked it to search.
+  if (!isOfficialManufacturerSource(brand, source)) {
+    return null;
+  }
+
+  return hex;
+};
+
 export const applyPaintColor = async (
   roomBase64: string,
   roomMimeType: string,
@@ -144,45 +452,158 @@ export const applyPaintColor = async (
 ): Promise<{ base64: string; mimeType: string }> => {
   let hexColor: string | null = directHex || null;
 
+  // ---------------------------------------------------------------------------
+  // 1. Direct colour-picker selection
+  //
+  // This remains completely independent of manufacturer lookup.
+  // ---------------------------------------------------------------------------
+
   if (!hexColor) {
-    const parts = colorQuery.split(',').map(p => p.trim());
-    const brand = parts[0];
-    const name = parts.slice(1).join(',').trim();
+    const localMatch = findPaintFromQuery(colorQuery);
+
+    if (localMatch) {
+      hexColor = localMatch.hex;
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 2. Known manufacturer colour in our local database
+  //
+  // This is the fastest and safest route.
+  //
+  // Example:
+  // "Mylands Market Green No.38"
+  //
+  // If Market Green exists in paintColors.ts, no online search is necessary.
+  // ---------------------------------------------------------------------------
+
+  if (!hexColor) {
+    const {
+      brand,
+      name,
+    } = extractManufacturerAndColour(colorQuery);
 
     if (brand && name) {
-      const matchedPaint = findPaintByBrandAndName(brand, name);
+      const matchedPaint = findPaintByBrandAndName(
+        brand,
+        name
+      );
 
       if (matchedPaint) {
         hexColor = matchedPaint.hex;
       }
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 3. Recognised manufacturer, but colour is not yet in our local database
+  //
+  // Search the manufacturer's official website.
+  //
+  // IMPORTANT:
+  // We do NOT fall through to generic AI colour guessing if this fails.
+  // ---------------------------------------------------------------------------
+
+  if (!hexColor && isKnownPaintBrand(colorQuery)) {
+    const {
+      brand,
+      name,
+    } = extractManufacturerAndColour(colorQuery);
+
+    if (brand && name) {
+      hexColor = await findManufacturerColourOnline(
+        brand,
+        name
+      );
+    }
 
     if (!hexColor) {
-      let colorPrompt: string;
-
-      if (brand && name) {
-        colorPrompt = `You are a professional paint colour matcher. Verify the exact HEX code for "${name}" by ${brand}. Return ONLY a single 6-digit HEX code (e.g. #C4AFB1).`;
-      } else {
-        colorPrompt = `Provide a PRECISE HEX code for: "${colorQuery}". "Cream" MUST be warm and yellow-toned (#F3E5AB). "Navy" or "Dark Blue" MUST be visibly blue (#121F33). "Burgundy" MUST be a deep, saturated wine-red (#800020). "Bright Yellow" MUST be a vivid yellow (#FFD700). Return ONLY the HEX code.`;
-      }
-
-      const colorData = await callGemini('gemini-2.5-flash', {
-        contents: [
-          {
-            parts: [{ text: colorPrompt }],
-          },
-        ],
-        tools: [{ googleSearch: {} }],
-      });
-
-      const colorText =
-        colorData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-
-      hexColor = colorText.startsWith('#')
-        ? colorText
-        : `#${colorText}`;
+      throw new Error(
+        `I couldn't verify the exact ${brand || 'manufacturer'} colour "${name || colorQuery}" from the manufacturer's official website. Please check the colour name and try again.`
+      );
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // 4. Generic colour
+  //
+  // This route is ONLY reached when the user has not specified a recognised
+  // manufacturer.
+  //
+  // Examples:
+  // "warm cream"
+  // "sage green"
+  // "deep navy"
+  // ---------------------------------------------------------------------------
+
+  if (!hexColor) {
+    const colorPrompt = `
+Provide a PRECISE digital HEX code for:
+
+"${colorQuery}"
+
+This is a generic colour description, NOT a recognised manufacturer-specific
+paint colour.
+
+Use these rules where applicable:
+
+- "Cream" MUST be warm and yellow-toned (#F3E5AB).
+- "Navy" or "Dark Blue" MUST be visibly blue (#121F33).
+- "Burgundy" MUST be a deep, saturated wine-red (#800020).
+- "Bright Yellow" MUST be a vivid yellow (#FFD700).
+
+Return ONLY a single 6-digit HEX code, for example:
+
+#C4AFB1
+`;
+
+    const colorData = await callGemini(
+      'gemini-2.5-flash',
+      {
+        contents: [
+          {
+            parts: [
+              {
+                text: colorPrompt,
+              },
+            ],
+          },
+        ],
+      },
+      {
+        // Colour identification does not consume a design allowance.
+        countUsage: false,
+      }
+    );
+
+    const colorText =
+      colorData.candidates?.[0]?.content?.parts
+        ?.map((part: any) => part.text || '')
+        .join('')
+        .trim() || '';
+
+    const hexMatch = colorText.match(
+      /#[0-9A-Fa-f]{6}/
+    );
+
+    if (hexMatch) {
+      hexColor = hexMatch[0].toUpperCase();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // 5. Final safety check
+  // ---------------------------------------------------------------------------
+
+  if (!hexColor) {
+    throw new Error(
+      `I couldn't identify the exact colour "${colorQuery}". Please check the colour name and try again.`
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // 6. Apply the selected colour to the room
+  // ---------------------------------------------------------------------------
 
   const recolorPrompt = `TASK: Repaint ONLY the walls of this room with HEX colour: ${hexColor}.
 
@@ -228,6 +649,7 @@ export const applyPaintColor = async (
       },
     },
     {
+      // THIS is the actual billable/user-facing design.
       countUsage: true,
     }
   );

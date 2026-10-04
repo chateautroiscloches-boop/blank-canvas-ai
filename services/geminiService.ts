@@ -1,15 +1,95 @@
 import { GroundingChunk } from '../types';
 import { findPaintByBrandAndName } from '../functions/authoritativePaintService';
 
-const WORKER_URL = 'https://blank-canvas-proxy.chateautroiscloches.workers.dev';
+const WORKER_URL =
+  'https://blank-canvas-proxy.chateautroiscloches.workers.dev';
 
 const IMAGE_MODEL = 'gemini-3.1-flash-image';
 
-const callGemini = async (model: string, payload: object): Promise<any> => {
+const USER_ID_STORAGE_KEY = 'bcai_user_id';
+
+/**
+ * Creates a random anonymous installation ID.
+ *
+ * This is NOT a name, email address, IP address or Apple ID.
+ * It simply lets the server recognise the same browser installation
+ * for weekly usage limiting.
+ */
+const getAnonymousUserId = (): string => {
+  try {
+    const existing = localStorage.getItem(USER_ID_STORAGE_KEY);
+
+    if (existing) {
+      return existing;
+    }
+
+    const id =
+      typeof crypto !== 'undefined' && crypto.randomUUID
+        ? crypto.randomUUID()
+        : `bcai_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+    localStorage.setItem(USER_ID_STORAGE_KEY, id);
+
+    return id;
+  } catch {
+    return `bcai_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  }
+};
+
+/**
+ * Creates a unique ID for one user-facing design workflow.
+ *
+ * The Worker uses this so a workflow can only consume one allowance,
+ * even where the workflow requires more than one Gemini request.
+ */
+const createGenerationId = (): string => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  return `generation_${Date.now()}_${Math.random()
+    .toString(36)
+    .slice(2)}`;
+};
+
+/**
+ * Wallpaper requires two image requests:
+ *
+ * 1. Extract the wallpaper pattern
+ * 2. Apply that pattern to the room
+ *
+ * Only step 2 should consume one weekly design allowance.
+ *
+ * This stores the workflow ID between those two calls.
+ */
+let pendingWallpaperGenerationId: string | null = null;
+
+const callGemini = async (
+  model: string,
+  payload: object,
+  options?: {
+    countUsage?: boolean;
+    generationId?: string;
+  }
+): Promise<any> => {
+  const userId = getAnonymousUserId();
+
+  const generationId =
+    options?.generationId ||
+    (options?.countUsage ? createGenerationId() : undefined);
+
   const response = await fetch(WORKER_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, payload }),
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      payload,
+      userId,
+      generationId,
+      countUsage: options?.countUsage === true,
+    }),
   });
 
   if (!response.ok) {
@@ -18,13 +98,16 @@ const callGemini = async (model: string, payload: object): Promise<any> => {
     try {
       const errorData = await response.json();
 
-      if (errorData?.message) {
+      if (errorData?.code === 'WEEKLY_LIMIT_REACHED') {
+        errorMessage =
+          'You have used all 10 free designs this week. Your allowance will reset automatically after 7 days.';
+      } else if (errorData?.message) {
         errorMessage = errorData.message;
       } else if (errorData?.error) {
         errorMessage =
           typeof errorData.error === 'string'
             ? errorData.error
-            : errorData.error.message || errorMessage;
+            : errorData.error?.message || errorMessage;
       }
     } catch {
       // Keep the original status-based error if the response is not JSON.
@@ -122,26 +205,32 @@ export const applyPaintColor = async (
 - Maintain realistic lighting, shadows and depth on the walls.
 - Output ONLY the final image.`;
 
-  const data = await callGemini(IMAGE_MODEL, {
-    contents: [
-      {
-        parts: [
-          {
-            inlineData: {
-              data: roomBase64,
-              mimeType: roomMimeType,
+  const data = await callGemini(
+    IMAGE_MODEL,
+    {
+      contents: [
+        {
+          parts: [
+            {
+              inlineData: {
+                data: roomBase64,
+                mimeType: roomMimeType,
+              },
             },
-          },
-          {
-            text: recolorPrompt,
-          },
-        ],
+            {
+              text: recolorPrompt,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        responseModalities: ['IMAGE'],
       },
-    ],
-    generationConfig: {
-      responseModalities: ['IMAGE'],
     },
-  });
+    {
+      countUsage: true,
+    }
+  );
 
   return getImageFromResponse(data);
 };
@@ -150,26 +239,41 @@ export const extractPatternFromImage = async (
   imageBase64: string,
   imageMimeType: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  const data = await callGemini(IMAGE_MODEL, {
-    contents: [
-      {
-        parts: [
-          {
-            inlineData: {
-              data: imageBase64,
-              mimeType: imageMimeType,
+  /**
+   * Start a wallpaper workflow.
+   *
+   * This request DOES NOT consume a weekly allowance.
+   * The final applyStyle request will consume it.
+   */
+  pendingWallpaperGenerationId = createGenerationId();
+
+  const data = await callGemini(
+    IMAGE_MODEL,
+    {
+      contents: [
+        {
+          parts: [
+            {
+              inlineData: {
+                data: imageBase64,
+                mimeType: imageMimeType,
+              },
             },
-          },
-          {
-            text: 'Extract a clean, flat, front-facing tileable wallpaper pattern swatch from this image. Remove all background.',
-          },
-        ],
+            {
+              text: 'Extract a clean, flat, front-facing tileable wallpaper pattern swatch from this image. Remove all background.',
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        responseModalities: ['IMAGE'],
       },
-    ],
-    generationConfig: {
-      responseModalities: ['IMAGE'],
     },
-  });
+    {
+      countUsage: false,
+      generationId: pendingWallpaperGenerationId,
+    }
+  );
 
   return getImageFromResponse(data);
 };
@@ -178,26 +282,39 @@ export const applyStyle = async (
   roomBase64: string,
   roomMimeType: string,
   styleBase64: string,
-  styleMimeType: string,
+  styleMimeType: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  const data = await callGemini(IMAGE_MODEL, {
-    contents: [
-      {
-        parts: [
-          {
-            inlineData: {
-              data: roomBase64,
-              mimeType: roomMimeType,
+  /**
+   * Use the workflow ID created by extractPatternFromImage().
+   *
+   * This is the point at which the wallpaper workflow consumes
+   * one weekly design allowance.
+   */
+  const generationId =
+    pendingWallpaperGenerationId || createGenerationId();
+
+  pendingWallpaperGenerationId = null;
+
+  const data = await callGemini(
+    IMAGE_MODEL,
+    {
+      contents: [
+        {
+          parts: [
+            {
+              inlineData: {
+                data: roomBase64,
+                mimeType: roomMimeType,
+              },
             },
-          },
-          {
-            inlineData: {
-              data: styleBase64,
-              mimeType: styleMimeType,
+            {
+              inlineData: {
+                data: styleBase64,
+                mimeType: styleMimeType,
+              },
             },
-          },
-          {
-            text: `Apply the provided wallpaper pattern to EVERY wall surface in this room.
+            {
+              text: `Apply the provided wallpaper pattern to EVERY wall surface in this room.
 
 **STRICT RULES - MANDATORY:**
 - Apply wallpaper to wall surfaces ONLY.
@@ -213,14 +330,16 @@ export const applyStyle = async (
 - Every single object must look IDENTICAL to the original image except the walls.
 - Maintain realistic scale and perspective of the wallpaper pattern.
 - Output ONLY the final image.`,
-          },
-        ],
-      },
-    ],
-    generationConfig: {
-      responseModalities: ['IMAGE'],
+            },
+          ],
+        },
+      ],
     },
-  });
+    {
+      countUsage: true,
+      generationId,
+    }
+  );
 
   return getImageFromResponse(data);
 };
@@ -232,18 +351,20 @@ export const applyPanelling = async (
   height: string,
   colorDescription: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  const data = await callGemini(IMAGE_MODEL, {
-    contents: [
-      {
-        parts: [
-          {
-            inlineData: {
-              data: roomBase64,
-              mimeType: roomMimeType,
+  const data = await callGemini(
+    IMAGE_MODEL,
+    {
+      contents: [
+        {
+          parts: [
+            {
+              inlineData: {
+                data: roomBase64,
+                mimeType: roomMimeType,
+              },
             },
-          },
-          {
-            text: `Add ${style} wall panelling to ${height} of ALL walls in colour: ${colorDescription}.
+            {
+              text: `Add ${style} wall panelling to ${height} of ALL walls in colour: ${colorDescription}.
 
 **STRICT RULES - MANDATORY:**
 - Add panelling to wall surfaces ONLY.
@@ -259,14 +380,15 @@ export const applyPanelling = async (
 - Every single object in the room must look IDENTICAL to the original image except the walls.
 - Use realistic wood texture and shadow depth on the panelling.
 - Output ONLY the final image.`,
-          },
-        ],
-      },
-    ],
-    generationConfig: {
-      responseModalities: ['IMAGE'],
+            },
+          ],
+        },
+      ],
     },
-  });
+    {
+      countUsage: true,
+    }
+  );
 
   return getImageFromResponse(data);
 };
@@ -283,41 +405,58 @@ export const editText = async (
     TASK: ${prompt}
     
     **DESIGN LOCKDOWN DIRECTIVE (MANDATORY):**
-    ${!isChangingWalls ? `
+    ${
+      !isChangingWalls
+        ? `
     - The WALLS, CEILING and TRIM are DELIBERATE DESIGN CHOICES. DO NOT change them.
     - DO NOT change the colour, pattern, or saturation of the walls, ceiling or skirting.
     - DO NOT change the colour, pattern or texture of any furniture, cushions, rugs, curtains, blinds or other objects unless explicitly asked.
     - Treat wall surfaces, ceiling and all existing furniture as PROTECTED LAYERS.
-    ` : `
+    `
+        : `
     - If modifying wall/trim colour: Use DESTRUCTIVE OVERWRITE on walls only. Replace with 100% opacity.
     - Do NOT paint the ceiling unless explicitly asked.
     - DO NOT change furniture, cushions, rugs, curtains or other objects.
     - "Cream" = Buttery warm. "Burgundy" = Deep saturated red. "Navy" = Visible blue.
-    `}
+    `
+    }
     - Maintain consistent lighting and photo-realism.
     - ONLY change the specific objects or areas explicitly requested.
   `;
 
-  const data = await callGemini(IMAGE_MODEL, {
-    contents: [
-      {
-        parts: [
-          {
-            inlineData: {
-              data: imageBase64,
-              mimeType: imageMimeType,
+  const data = await callGemini(
+    IMAGE_MODEL,
+    {
+      contents: [
+        {
+          parts: [
+            {
+              inlineData: {
+                data: imageBase64,
+                mimeType: imageMimeType,
+              },
             },
-          },
-          {
-            text: enhancedPrompt,
-          },
-        ],
+            {
+              text: enhancedPrompt,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        responseModalities: ['IMAGE'],
       },
-    ],
-    generationConfig: {
-      responseModalities: ['IMAGE'],
     },
-  });
+    {
+      /**
+       * Left intentionally as-is for now.
+       *
+       * Your App.tsx currently does not count editText()
+       * as one of the normal 10 weekly designs, and you said
+       * this function is unlikely to be used much.
+       */
+      countUsage: false,
+    }
+  );
 
   return getImageFromResponse(data);
 };
@@ -326,6 +465,10 @@ export const getDesignIdeasFromImage = async (
   roomBase64: string,
   roomMimeType: string
 ): Promise<{ text: string; sources?: GroundingChunk[] }> => {
+  /**
+   * Design Ideas is a text/research request and does not consume
+   * one of the 10 image-design allowances.
+   */
   const data = await callGemini('gemini-2.5-flash', {
     contents: [
       {
@@ -366,26 +509,32 @@ export const implementDesignIdeas = async (
 - Only ADD the new requested elements to the scene.
 - Output ONLY the final image.`;
 
-  const data = await callGemini(IMAGE_MODEL, {
-    contents: [
-      {
-        parts: [
-          {
-            inlineData: {
-              data: roomBase64,
-              mimeType: roomMimeType,
+  const data = await callGemini(
+    IMAGE_MODEL,
+    {
+      contents: [
+        {
+          parts: [
+            {
+              inlineData: {
+                data: roomBase64,
+                mimeType: roomMimeType,
+              },
             },
-          },
-          {
-            text: enhancedPrompt,
-          },
-        ],
+            {
+              text: enhancedPrompt,
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        responseModalities: ['IMAGE'],
       },
-    ],
-    generationConfig: {
-      responseModalities: ['IMAGE'],
     },
-  });
+    {
+      countUsage: true,
+    }
+  );
 
   return getImageFromResponse(data);
 };
@@ -393,12 +542,18 @@ export const implementDesignIdeas = async (
 export const generateWallpaperSwatch = async (
   prompt: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  const data = await callGemini(IMAGE_MODEL, {
-    contents: [
-      {
-        parts: [
-          {
-            text: `Create a clean, flat, front-facing, seamless tileable wallpaper swatch based on this description:
+  /**
+   * This is kept outside the main weekly room-design allowance
+   * for now, preserving the current behaviour.
+   */
+  const data = await callGemini(
+    IMAGE_MODEL,
+    {
+      contents: [
+        {
+          parts: [
+            {
+              text: `Create a clean, flat, front-facing, seamless tileable wallpaper swatch based on this description:
 
 ${prompt}
 
@@ -410,14 +565,18 @@ Requirements:
 - The pattern should tile seamlessly in both directions.
 - Preserve the requested colours and visual style.
 - Output ONLY the wallpaper swatch image.`,
-          },
-        ],
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        responseModalities: ['IMAGE'],
       },
-    ],
-    generationConfig: {
-      responseModalities: ['IMAGE'],
     },
-  });
+    {
+      countUsage: false,
+    }
+  );
 
   return getImageFromResponse(data);
 };

@@ -24,6 +24,42 @@ import { logPaintSearch } from './services/analyticsService';
 
 const WEEKLY_LIMIT = 10;
 const STORAGE_KEY = 'bcai_usage';
+const USER_ID_STORAGE_KEY = 'bcai_anonymous_user_id';
+
+/*
+ * Anonymous installation ID
+ *
+ * This is a random identifier stored only on the user's device.
+ * It does not contain or reveal the user's name, email address,
+ * Apple ID, IP address, or other personally identifying information.
+ *
+ * The Cloudflare Worker will use this ID to apply the weekly
+ * generation limit server-side.
+ */
+const getAnonymousUserId = (): string => {
+  try {
+    const existingId = localStorage.getItem(USER_ID_STORAGE_KEY);
+
+    if (existingId) {
+      return existingId;
+    }
+
+    const newId =
+      typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random()
+            .toString(36)
+            .slice(2)}`;
+
+    localStorage.setItem(USER_ID_STORAGE_KEY, newId);
+
+    return newId;
+  } catch {
+    return `anonymous-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}`;
+  }
+};
 
 const getUsageData = () => {
   try {
@@ -355,6 +391,11 @@ const App: React.FC = () => {
   const [roomImage, setRoomImage] = useState<File | null>(null);
   const [originalRoom, setOriginalRoom] = useState<{ base64: string; mimeType: string } | null>(null);
 
+  // Ensure the anonymous installation ID exists before any AI requests are made.
+  useEffect(() => {
+    getAnonymousUserId();
+  }, []);
+
   // Wallpaper state
   const [styleImage, setStyleImage] = useState<File | null>(null);
 
@@ -575,6 +616,22 @@ const App: React.FC = () => {
     setUsageCount(newData.count);
   };
 
+  const handleServerLimitError = (err: any): boolean => {
+    const message = String(err?.message || '');
+
+    if (
+      message.includes('WEEKLY_LIMIT_REACHED') ||
+      message.includes('Weekly limit reached') ||
+      message.includes('429')
+    ) {
+      setShowLimitModal(true);
+      setUsageCount(WEEKLY_LIMIT);
+      return true;
+    }
+
+    return false;
+  };
+
   const handleSubmit = useCallback(async () => {
     const currentUsage = getUsageData();
 
@@ -697,7 +754,9 @@ const App: React.FC = () => {
         data: watermarkedImage,
       });
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred.');
+      if (!handleServerLimitError(err)) {
+        setError(err.message || 'An unexpected error occurred.');
+      }
     } finally {
       setIsLoading(false);
       setLoadingMessage('Preparing your design...');
@@ -720,6 +779,13 @@ const App: React.FC = () => {
         return;
       }
 
+      const currentUsage = getUsageData();
+
+      if (currentUsage.count >= WEEKLY_LIMIT) {
+        setShowLimitModal(true);
+        return;
+      }
+
       setError(null);
       setIsLoading(true);
 
@@ -738,6 +804,8 @@ const App: React.FC = () => {
         setFuture([]);
         setLastUnalteredResult(generatedImage);
 
+        incrementUsage();
+
         const watermarkedImage = await addWatermark(
           generatedImage.base64,
           'Blank Canvas AI'
@@ -748,10 +816,12 @@ const App: React.FC = () => {
           data: watermarkedImage,
         });
       } catch (err: any) {
-        setError(
-          err.message ||
-            'An unexpected error occurred during edit.'
-        );
+        if (!handleServerLimitError(err)) {
+          setError(
+            err.message ||
+              'An unexpected error occurred during edit.'
+          );
+        }
       } finally {
         setIsLoading(false);
       }
@@ -881,10 +951,12 @@ const App: React.FC = () => {
         sources: response.sources,
       });
     } catch (err: any) {
-      setError(
-        err.message ||
-          'An unexpected error occurred while getting design ideas.'
-      );
+      if (!handleServerLimitError(err)) {
+        setError(
+          err.message ||
+            'An unexpected error occurred while getting design ideas.'
+        );
+      }
     } finally {
       setIsLoading(false);
     }
@@ -904,6 +976,13 @@ const App: React.FC = () => {
     const imageSource = lastUnalteredResult || originalRoom;
 
     if (!imageSource || selectedIdeas.length === 0) {
+      return;
+    }
+
+    const currentUsage = getUsageData();
+
+    if (currentUsage.count >= WEEKLY_LIMIT) {
+      setShowLimitModal(true);
       return;
     }
 
@@ -950,10 +1029,12 @@ const App: React.FC = () => {
       setDesignIdeas(null);
       setSelectedIdeas([]);
     } catch (err: any) {
-      setError(
-        err.message ||
-          'An unexpected error occurred while implementing ideas.'
-      );
+      if (!handleServerLimitError(err)) {
+        setError(
+          err.message ||
+            'An unexpected error occurred while implementing ideas.'
+        );
+      }
     } finally {
       setIsLoading(false);
     }

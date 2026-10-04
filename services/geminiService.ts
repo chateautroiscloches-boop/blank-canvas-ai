@@ -3,26 +3,53 @@ import { findPaintByBrandAndName } from '../functions/authoritativePaintService'
 
 const WORKER_URL = 'https://blank-canvas-proxy.chateautroiscloches.workers.dev';
 
+const IMAGE_MODEL = 'gemini-3.1-flash-image';
+
 const callGemini = async (model: string, payload: object): Promise<any> => {
   const response = await fetch(WORKER_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ model, payload }),
   });
+
   if (!response.ok) {
-    throw new Error(`Worker error: ${response.status}`);
+    let errorMessage = `Worker error: ${response.status}`;
+
+    try {
+      const errorData = await response.json();
+
+      if (errorData?.message) {
+        errorMessage = errorData.message;
+      } else if (errorData?.error) {
+        errorMessage =
+          typeof errorData.error === 'string'
+            ? errorData.error
+            : errorData.error.message || errorMessage;
+      }
+    } catch {
+      // Keep the original status-based error if the response is not JSON.
+    }
+
+    throw new Error(errorMessage);
   }
+
   return response.json();
 };
 
-const getImageFromResponse = (data: any): { base64: string; mimeType: string } => {
+const getImageFromResponse = (
+  data: any
+): { base64: string; mimeType: string } => {
   if (data.candidates?.[0]?.content?.parts) {
     for (const part of data.candidates[0].content.parts) {
       if (part.inlineData) {
-        return { base64: part.inlineData.data, mimeType: part.inlineData.mimeType };
+        return {
+          base64: part.inlineData.data,
+          mimeType: part.inlineData.mimeType,
+        };
       }
     }
   }
+
   throw new Error('No image data found in AI response.');
 };
 
@@ -41,6 +68,7 @@ export const applyPaintColor = async (
 
     if (brand && name) {
       const matchedPaint = findPaintByBrandAndName(brand, name);
+
       if (matchedPaint) {
         hexColor = matchedPaint.hex;
       }
@@ -48,6 +76,7 @@ export const applyPaintColor = async (
 
     if (!hexColor) {
       let colorPrompt: string;
+
       if (brand && name) {
         colorPrompt = `You are a professional paint colour matcher. Verify the exact HEX code for "${name}" by ${brand}. Return ONLY a single 6-digit HEX code (e.g. #C4AFB1).`;
       } else {
@@ -55,12 +84,20 @@ export const applyPaintColor = async (
       }
 
       const colorData = await callGemini('gemini-2.5-flash', {
-        contents: [{ parts: [{ text: colorPrompt }] }],
+        contents: [
+          {
+            parts: [{ text: colorPrompt }],
+          },
+        ],
         tools: [{ googleSearch: {} }],
       });
 
-      const colorText = colorData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-      hexColor = colorText.startsWith('#') ? colorText : `#${colorText}`;
+      const colorText =
+        colorData.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+
+      hexColor = colorText.startsWith('#')
+        ? colorText
+        : `#${colorText}`;
     }
   }
 
@@ -85,14 +122,25 @@ export const applyPaintColor = async (
 - Maintain realistic lighting, shadows and depth on the walls.
 - Output ONLY the final image.`;
 
-  const data = await callGemini('gemini-3.1-flash-image-preview', {
-    contents: [{
-      parts: [
-        { inlineData: { data: roomBase64, mimeType: roomMimeType } },
-        { text: recolorPrompt },
-      ],
-    }],
-    generationConfig: { responseModalities: ['IMAGE'] },
+  const data = await callGemini(IMAGE_MODEL, {
+    contents: [
+      {
+        parts: [
+          {
+            inlineData: {
+              data: roomBase64,
+              mimeType: roomMimeType,
+            },
+          },
+          {
+            text: recolorPrompt,
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseModalities: ['IMAGE'],
+    },
   });
 
   return getImageFromResponse(data);
@@ -102,15 +150,27 @@ export const extractPatternFromImage = async (
   imageBase64: string,
   imageMimeType: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  const data = await callGemini('gemini-3.1-flash-image-preview', {
-    contents: [{
-      parts: [
-        { inlineData: { data: imageBase64, mimeType: imageMimeType } },
-        { text: 'Extract a clean, flat, front-facing tileable wallpaper pattern swatch from this image. Remove all background.' },
-      ],
-    }],
-    generationConfig: { responseModalities: ['IMAGE'] },
+  const data = await callGemini(IMAGE_MODEL, {
+    contents: [
+      {
+        parts: [
+          {
+            inlineData: {
+              data: imageBase64,
+              mimeType: imageMimeType,
+            },
+          },
+          {
+            text: 'Extract a clean, flat, front-facing tileable wallpaper pattern swatch from this image. Remove all background.',
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseModalities: ['IMAGE'],
+    },
   });
+
   return getImageFromResponse(data);
 };
 
@@ -120,12 +180,24 @@ export const applyStyle = async (
   styleBase64: string,
   styleMimeType: string,
 ): Promise<{ base64: string; mimeType: string }> => {
-  const data = await callGemini('gemini-3.1-flash-image-preview', {
-    contents: [{
-      parts: [
-        { inlineData: { data: roomBase64, mimeType: roomMimeType } },
-        { inlineData: { data: styleBase64, mimeType: styleMimeType } },
-        { text: `Apply the provided wallpaper pattern to EVERY wall surface in this room.
+  const data = await callGemini(IMAGE_MODEL, {
+    contents: [
+      {
+        parts: [
+          {
+            inlineData: {
+              data: roomBase64,
+              mimeType: roomMimeType,
+            },
+          },
+          {
+            inlineData: {
+              data: styleBase64,
+              mimeType: styleMimeType,
+            },
+          },
+          {
+            text: `Apply the provided wallpaper pattern to EVERY wall surface in this room.
 
 **STRICT RULES - MANDATORY:**
 - Apply wallpaper to wall surfaces ONLY.
@@ -140,11 +212,16 @@ export const applyStyle = async (
   * Doors, windows and door frames
 - Every single object must look IDENTICAL to the original image except the walls.
 - Maintain realistic scale and perspective of the wallpaper pattern.
-- Output ONLY the final image.` },
-      ],
-    }],
-    generationConfig: { responseModalities: ['IMAGE'] },
+- Output ONLY the final image.`,
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseModalities: ['IMAGE'],
+    },
   });
+
   return getImageFromResponse(data);
 };
 
@@ -155,11 +232,18 @@ export const applyPanelling = async (
   height: string,
   colorDescription: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  const data = await callGemini('gemini-3.1-flash-image-preview', {
-    contents: [{
-      parts: [
-        { inlineData: { data: roomBase64, mimeType: roomMimeType } },
-        { text: `Add ${style} wall panelling to ${height} of ALL walls in colour: ${colorDescription}.
+  const data = await callGemini(IMAGE_MODEL, {
+    contents: [
+      {
+        parts: [
+          {
+            inlineData: {
+              data: roomBase64,
+              mimeType: roomMimeType,
+            },
+          },
+          {
+            text: `Add ${style} wall panelling to ${height} of ALL walls in colour: ${colorDescription}.
 
 **STRICT RULES - MANDATORY:**
 - Add panelling to wall surfaces ONLY.
@@ -172,13 +256,18 @@ export const applyPanelling = async (
   * Lighting (lamps, pendants, spotlights)
   * Artwork, mirrors, plants, decorative objects
   * Doors, windows and door frames
-- Every single object must look IDENTICAL to the original image except the walls.
+- Every single object in the room must look IDENTICAL to the original image except the walls.
 - Use realistic wood texture and shadow depth on the panelling.
-- Output ONLY the final image.` },
-      ],
-    }],
-    generationConfig: { responseModalities: ['IMAGE'] },
+- Output ONLY the final image.`,
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseModalities: ['IMAGE'],
+    },
   });
+
   return getImageFromResponse(data);
 };
 
@@ -187,7 +276,8 @@ export const editText = async (
   imageMimeType: string,
   prompt: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  const isChangingWalls = /wall|skirting|paint|wallpaper|trim|skirt/i.test(prompt);
+  const isChangingWalls =
+    /wall|skirting|paint|wallpaper|trim|skirt/i.test(prompt);
 
   const enhancedPrompt = `
     TASK: ${prompt}
@@ -208,35 +298,58 @@ export const editText = async (
     - ONLY change the specific objects or areas explicitly requested.
   `;
 
-  const data = await callGemini('gemini-3.1-flash-image-preview', {
-    contents: [{
-      parts: [
-        { inlineData: { data: imageBase64, mimeType: imageMimeType } },
-        { text: enhancedPrompt },
-      ],
-    }],
-    generationConfig: { responseModalities: ['IMAGE'] },
+  const data = await callGemini(IMAGE_MODEL, {
+    contents: [
+      {
+        parts: [
+          {
+            inlineData: {
+              data: imageBase64,
+              mimeType: imageMimeType,
+            },
+          },
+          {
+            text: enhancedPrompt,
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseModalities: ['IMAGE'],
+    },
   });
+
   return getImageFromResponse(data);
 };
 
 export const getDesignIdeasFromImage = async (
   roomBase64: string,
   roomMimeType: string
-): Promise<{ text: string, sources?: GroundingChunk[] }> => {
+): Promise<{ text: string; sources?: GroundingChunk[] }> => {
   const data = await callGemini('gemini-2.5-flash', {
-    contents: [{
-      parts: [
-        { inlineData: { data: roomBase64, mimeType: roomMimeType } },
-        { text: 'Suggest 3-5 additive decor items (plants, art, lighting) for this room. Concise bullets.' },
-      ],
-    }],
+    contents: [
+      {
+        parts: [
+          {
+            inlineData: {
+              data: roomBase64,
+              mimeType: roomMimeType,
+            },
+          },
+          {
+            text: 'Suggest 3-5 additive decor items (plants, art, lighting) for this room. Concise bullets.',
+          },
+        ],
+      },
+    ],
     tools: [{ googleSearch: {} }],
   });
 
   return {
-    text: data.candidates?.[0]?.content?.parts?.[0]?.text || '',
-    sources: data.candidates?.[0]?.groundingMetadata?.groundingChunks,
+    text:
+      data.candidates?.[0]?.content?.parts?.[0]?.text || '',
+    sources:
+      data.candidates?.[0]?.groundingMetadata?.groundingChunks,
   };
 };
 
@@ -253,28 +366,58 @@ export const implementDesignIdeas = async (
 - Only ADD the new requested elements to the scene.
 - Output ONLY the final image.`;
 
-  const data = await callGemini('gemini-3.1-flash-image-preview', {
-    contents: [{
-      parts: [
-        { inlineData: { data: roomBase64, mimeType: roomMimeType } },
-        { text: enhancedPrompt },
-      ],
-    }],
-    generationConfig: { responseModalities: ['IMAGE'] },
+  const data = await callGemini(IMAGE_MODEL, {
+    contents: [
+      {
+        parts: [
+          {
+            inlineData: {
+              data: roomBase64,
+              mimeType: roomMimeType,
+            },
+          },
+          {
+            text: enhancedPrompt,
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseModalities: ['IMAGE'],
+    },
   });
+
   return getImageFromResponse(data);
 };
 
 export const generateWallpaperSwatch = async (
   prompt: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  const data = await callGemini('imagen-4.0-generate-001', {
-    prompt: `Tileable wallpaper swatch: ${prompt}`,
-    generationConfig: { numberOfImages: 1, outputMimeType: 'image/png', aspectRatio: '1:1' },
+  const data = await callGemini(IMAGE_MODEL, {
+    contents: [
+      {
+        parts: [
+          {
+            text: `Create a clean, flat, front-facing, seamless tileable wallpaper swatch based on this description:
+
+${prompt}
+
+Requirements:
+- Wallpaper pattern only.
+- No room, furniture, walls or surrounding environment.
+- No borders or frames.
+- Flat front-facing presentation.
+- The pattern should tile seamlessly in both directions.
+- Preserve the requested colours and visual style.
+- Output ONLY the wallpaper swatch image.`,
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseModalities: ['IMAGE'],
+    },
   });
 
-  if (data.generatedImages?.[0]) {
-    return { base64: data.generatedImages[0].image.imageBytes, mimeType: 'image/png' };
-  }
-  throw new Error('Generation failed.');
+  return getImageFromResponse(data);
 };

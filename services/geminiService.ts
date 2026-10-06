@@ -17,9 +17,6 @@ const getAnonymousUserId = (): string => {
     const existing = localStorage.getItem(USER_ID_STORAGE_KEY);
 
     if (existing) {
-      // TEMPORARY: show the existing installation ID.
-      alert(`Your Blank Canvas AI ID is:\n\n${existing}`);
-
       return existing;
     }
 
@@ -30,18 +27,9 @@ const getAnonymousUserId = (): string => {
 
     localStorage.setItem(USER_ID_STORAGE_KEY, id);
 
-    // TEMPORARY: show the newly-created installation ID.
-    alert(`Your Blank Canvas AI ID is:\n\n${id}`);
-
     return id;
   } catch {
-    const fallbackId =
-      `bcai_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-
-    // TEMPORARY: show the fallback installation ID.
-    alert(`Your Blank Canvas AI ID is:\n\n${fallbackId}`);
-
-    return fallbackId;
+    return `bcai_${Date.now()}_${Math.random().toString(36).slice(2)}`;
   }
 };
 
@@ -327,8 +315,8 @@ HEX: #XXXXXX
 NAME: Exact Colour Name
 SOURCE: https://official-manufacturer-url
 
-If you cannot find the exact named colour on the official manufacturer's
-website, return exactly:
+If you cannot find the exact named colour on the manufacturer's
+official website, return exactly:
 
 NO_VERIFIED_MANUFACTURER_COLOUR
 `;

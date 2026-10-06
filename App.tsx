@@ -391,10 +391,38 @@ const App: React.FC = () => {
   const [roomImage, setRoomImage] = useState<File | null>(null);
   const [originalRoom, setOriginalRoom] = useState<{ base64: string; mimeType: string } | null>(null);
 
+  /*
+   * TEMPORARY ID DISPLAY
+   *
+   * This is only here so we can retrieve the anonymous installation
+   * ID from this device and add it to the Cloudflare admin list.
+   *
+   * REMOVE THIS SECTION AFTER THE ID HAS BEEN COPIED.
+   */
+  const [installationId, setInstallationId] = useState<string>('');
+  const [idCopied, setIdCopied] = useState(false);
+
   // Ensure the anonymous installation ID exists before any AI requests are made.
   useEffect(() => {
-    getAnonymousUserId();
+    const id = getAnonymousUserId();
+    setInstallationId(id);
   }, []);
+
+  const handleCopyInstallationId = async () => {
+    if (!installationId) return;
+
+    try {
+      await navigator.clipboard.writeText(installationId);
+      setIdCopied(true);
+
+      setTimeout(() => {
+        setIdCopied(false);
+      }, 2000);
+    } catch {
+      // If clipboard access is unavailable, the ID remains visible
+      // so it can still be copied manually.
+    }
+  };
 
   // Wallpaper state
   const [styleImage, setStyleImage] = useState<File | null>(null);
@@ -1167,7 +1195,7 @@ const App: React.FC = () => {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
+                        d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 1 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"
                       />
                     </svg>
                   }
@@ -1504,6 +1532,39 @@ const App: React.FC = () => {
           <div className="w-full max-w-full min-w-0 overflow-x-hidden">
             <Header />
           </div>
+
+          {/* =========================================================
+              TEMPORARY INSTALLATION ID PANEL
+              Remove this whole block after copying the ID.
+              ========================================================= */}
+          {installationId && (
+            <div className="w-full max-w-full bg-gold/10 border-b border-gold/40 px-4 py-4">
+              <div className="max-w-3xl mx-auto text-center">
+                <p className="text-xs uppercase tracking-widest text-gold font-semibold mb-2">
+                  Temporary Developer ID
+                </p>
+
+                <p className="text-xs text-text-secondary mb-3">
+                  Copy this ID and send it to ChatGPT. This is only used
+                  to identify this installation for the free-design limit.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                  <code className="px-3 py-2 rounded-lg bg-background border border-border text-xs text-text-primary break-all select-all">
+                    {installationId}
+                  </code>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyInstallationId}
+                    className="px-4 py-2 rounded-full bg-gold text-background text-xs font-bold hover:brightness-110 transition"
+                  >
+                    {idCopied ? 'Copied!' : 'Copy ID'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Usage Notice Banner */}
           <div className="w-full max-w-full min-w-0 bg-surface border-b border-border/50 px-4 py-3 overflow-x-hidden">

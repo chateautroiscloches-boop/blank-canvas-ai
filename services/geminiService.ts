@@ -12,18 +12,14 @@ const IMAGE_MODEL = 'gemini-3.1-flash-image';
 
 const USER_ID_STORAGE_KEY = 'bcai_user_id';
 
-/**
- * Creates a random anonymous installation ID.
- *
- * This is NOT a name, email address, IP address or Apple ID.
- * It simply lets the server recognise the same browser installation
- * for weekly usage limiting.
- */
 const getAnonymousUserId = (): string => {
   try {
     const existing = localStorage.getItem(USER_ID_STORAGE_KEY);
 
     if (existing) {
+      // TEMPORARY: show the existing installation ID.
+      alert(`Your Blank Canvas AI ID is:\n\n${existing}`);
+
       return existing;
     }
 
@@ -34,18 +30,21 @@ const getAnonymousUserId = (): string => {
 
     localStorage.setItem(USER_ID_STORAGE_KEY, id);
 
+    // TEMPORARY: show the newly-created installation ID.
+    alert(`Your Blank Canvas AI ID is:\n\n${id}`);
+
     return id;
   } catch {
-    return `bcai_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const fallbackId =
+      `bcai_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+
+    // TEMPORARY: show the fallback installation ID.
+    alert(`Your Blank Canvas AI ID is:\n\n${fallbackId}`);
+
+    return fallbackId;
   }
 };
 
-/**
- * Creates a unique ID for one user-facing design workflow.
- *
- * The Worker uses this so a workflow can only consume one allowance,
- * even where the workflow requires more than one Gemini request.
- */
 const createGenerationId = (): string => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
     return crypto.randomUUID();
@@ -56,16 +55,6 @@ const createGenerationId = (): string => {
     .slice(2)}`;
 };
 
-/**
- * Wallpaper requires two image requests:
- *
- * 1. Extract the wallpaper pattern
- * 2. Apply that pattern to the room
- *
- * Only step 2 should consume one weekly design allowance.
- *
- * This stores the workflow ID between those two calls.
- */
 let pendingWallpaperGenerationId: string | null = null;
 
 const callGemini = async (
@@ -140,24 +129,14 @@ const getImageFromResponse = (
   throw new Error('No image data found in AI response.');
 };
 
-/**
- * Official manufacturer domains used when verifying manufacturer-specific
- * colours through Google Search.
- *
- * We deliberately do NOT accept random colour websites when the user has
- * explicitly named a manufacturer.
- */
 const OFFICIAL_MANUFACTURER_DOMAINS: Record<string, string[]> = {
-  'mylands': ['mylands.com'],
-  'farrowandball': ['farrow-ball.com', 'farrowandball.com'],
-  'benjaminmoore': ['benjaminmoore.com'],
-  'littlegreene': ['littlegreene.com'],
-  'rustoleum': ['rustoleum.com'],
+  mylands: ['mylands.com'],
+  farrowandball: ['farrow-ball.com', 'farrowandball.com'],
+  benjaminmoore: ['benjaminmoore.com'],
+  littlegreene: ['littlegreene.com'],
+  rustoleum: ['rustoleum.com'],
 };
 
-/**
- * Normalises a manufacturer name for matching against our official-domain map.
- */
 const normaliseManufacturerName = (value: string): string => {
   return value
     .toLowerCase()
@@ -166,10 +145,6 @@ const normaliseManufacturerName = (value: string): string => {
     .replace(/[^a-z0-9]/g, '');
 };
 
-/**
- * Checks whether the source returned by the manufacturer search belongs
- * to an official manufacturer domain.
- */
 const isOfficialManufacturerSource = (
   manufacturer: string,
   source: string
@@ -204,16 +179,6 @@ const isOfficialManufacturerSource = (
   }
 };
 
-/**
- * Extracts the manufacturer name and colour name from common user input
- * formats.
- *
- * Supported examples:
- *
- * "Mylands, Market Green No.38"
- * "Market Green No.38, Mylands"
- * "Mylands Market Green No.38"
- */
 const extractManufacturerAndColour = (
   colorQuery: string
 ): { brand: string; name: string } => {
@@ -232,8 +197,6 @@ const extractManufacturerAndColour = (
     .map((part) => part.trim())
     .filter(Boolean);
 
-  // First try the cleanest format:
-  // "Brand, Colour"
   if (commaParts.length >= 2) {
     const brandPart = commaParts.find((part) =>
       knownBrands.some(
@@ -255,8 +218,6 @@ const extractManufacturerAndColour = (
     }
   }
 
-  // Then handle:
-  // "Colour, Brand"
   if (commaParts.length >= 2) {
     const reversedBrandPart = commaParts.find((part) =>
       knownBrands.some(
@@ -278,8 +239,6 @@ const extractManufacturerAndColour = (
     }
   }
 
-  // Finally handle:
-  // "Brand Colour"
   const matchedBrand = knownBrands.find((brand) =>
     trimmedQuery
       .toLowerCase()
@@ -310,18 +269,6 @@ const extractManufacturerAndColour = (
   };
 };
 
-/**
- * Looks up a manufacturer-specific colour using Google Search.
- *
- * This is deliberately a TEXT/SEARCH lookup at this stage.
- *
- * The important distinction is that the search is instructed to use the
- * manufacturer's official website rather than asking Gemini to remember
- * or invent a HEX value.
- *
- * The returned HEX is a DIGITAL VISUALISATION REFERENCE. It is not claimed
- * to be an official manufacturer HEX specification.
- */
 const findManufacturerColourOnline = async (
   brand: string,
   colourName: string
@@ -367,7 +314,7 @@ SEARCH REQUIREMENTS:
 
 Once you have found the official manufacturer source, determine the closest
 useful DIGITAL HEX REPRESENTATION of the colour shown by that official
-manufacturer swatch/product.
+manufacturer swatch.
 
 IMPORTANT:
 The HEX is being used only as a digital visualisation reference.
@@ -401,7 +348,6 @@ NO_VERIFIED_MANUFACTURER_COLOUR
       tools: [{ googleSearch: {} }],
     },
     {
-      // Searching for a colour does NOT consume a design allowance.
       countUsage: false,
     }
   );
@@ -435,8 +381,6 @@ NO_VERIFIED_MANUFACTURER_COLOUR
   const hex = hexMatch[1].toUpperCase();
   const source = sourceMatch[1].replace(/[),.;]+$/, '');
 
-  // Do not accept a HEX result unless Gemini also supplied an official
-  // manufacturer source matching the manufacturer we asked it to search.
   if (!isOfficialManufacturerSource(brand, source)) {
     return null;
   }
@@ -452,12 +396,6 @@ export const applyPaintColor = async (
 ): Promise<{ base64: string; mimeType: string }> => {
   let hexColor: string | null = directHex || null;
 
-  // ---------------------------------------------------------------------------
-  // 1. Direct colour-picker selection
-  //
-  // This remains completely independent of manufacturer lookup.
-  // ---------------------------------------------------------------------------
-
   if (!hexColor) {
     const localMatch = findPaintFromQuery(colorQuery);
 
@@ -465,17 +403,6 @@ export const applyPaintColor = async (
       hexColor = localMatch.hex;
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // 2. Known manufacturer colour in our local database
-  //
-  // This is the fastest and safest route.
-  //
-  // Example:
-  // "Mylands Market Green No.38"
-  //
-  // If Market Green exists in paintColors.ts, no online search is necessary.
-  // ---------------------------------------------------------------------------
 
   if (!hexColor) {
     const {
@@ -494,15 +421,6 @@ export const applyPaintColor = async (
       }
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // 3. Recognised manufacturer, but colour is not yet in our local database
-  //
-  // Search the manufacturer's official website.
-  //
-  // IMPORTANT:
-  // We do NOT fall through to generic AI colour guessing if this fails.
-  // ---------------------------------------------------------------------------
 
   if (!hexColor && isKnownPaintBrand(colorQuery)) {
     const {
@@ -523,18 +441,6 @@ export const applyPaintColor = async (
       );
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // 4. Generic colour
-  //
-  // This route is ONLY reached when the user has not specified a recognised
-  // manufacturer.
-  //
-  // Examples:
-  // "warm cream"
-  // "sage green"
-  // "deep navy"
-  // ---------------------------------------------------------------------------
 
   if (!hexColor) {
     const colorPrompt = `
@@ -571,7 +477,6 @@ Return ONLY a single 6-digit HEX code, for example:
         ],
       },
       {
-        // Colour identification does not consume a design allowance.
         countUsage: false,
       }
     );
@@ -591,19 +496,11 @@ Return ONLY a single 6-digit HEX code, for example:
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // 5. Final safety check
-  // ---------------------------------------------------------------------------
-
   if (!hexColor) {
     throw new Error(
       `I couldn't identify the exact colour "${colorQuery}". Please check the colour name and try again.`
     );
   }
-
-  // ---------------------------------------------------------------------------
-  // 6. Apply the selected colour to the room
-  // ---------------------------------------------------------------------------
 
   const recolorPrompt = `TASK: Repaint ONLY the walls of this room with HEX colour: ${hexColor}.
 
@@ -649,7 +546,6 @@ Return ONLY a single 6-digit HEX code, for example:
       },
     },
     {
-      // THIS is the actual billable/user-facing design.
       countUsage: true,
     }
   );
@@ -661,12 +557,6 @@ export const extractPatternFromImage = async (
   imageBase64: string,
   imageMimeType: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  /**
-   * Start a wallpaper workflow.
-   *
-   * This request DOES NOT consume a weekly allowance.
-   * The final applyStyle request will consume it.
-   */
   pendingWallpaperGenerationId = createGenerationId();
 
   const data = await callGemini(
@@ -706,12 +596,6 @@ export const applyStyle = async (
   styleBase64: string,
   styleMimeType: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  /**
-   * Use the workflow ID created by extractPatternFromImage().
-   *
-   * This is the point at which the wallpaper workflow consumes
-   * one weekly design allowance.
-   */
   const generationId =
     pendingWallpaperGenerationId || createGenerationId();
 
@@ -869,13 +753,6 @@ export const editText = async (
       },
     },
     {
-      /**
-       * Left intentionally as-is for now.
-       *
-       * Your App.tsx currently does not count editText()
-       * as one of the normal 10 weekly designs, and you said
-       * this function is unlikely to be used much.
-       */
       countUsage: false,
     }
   );
@@ -887,10 +764,6 @@ export const getDesignIdeasFromImage = async (
   roomBase64: string,
   roomMimeType: string
 ): Promise<{ text: string; sources?: GroundingChunk[] }> => {
-  /**
-   * Design Ideas is a text/research request and does not consume
-   * one of the 10 image-design allowances.
-   */
   const data = await callGemini('gemini-2.5-flash', {
     contents: [
       {
@@ -964,10 +837,6 @@ export const implementDesignIdeas = async (
 export const generateWallpaperSwatch = async (
   prompt: string
 ): Promise<{ base64: string; mimeType: string }> => {
-  /**
-   * This is kept outside the main weekly room-design allowance
-   * for now, preserving the current behaviour.
-   */
   const data = await callGemini(
     IMAGE_MODEL,
     {
